@@ -1,7 +1,7 @@
 package net.christophschubert.kafka.clusterstate;
 
 import java.util.Objects;
-
+//TODO: remove this class and replace with before/after pair
 public class Pair<T, U> {
     public final T first;
     public final U second;

@@ -40,9 +40,10 @@ public class ClusterState {
          */
         Objects.requireNonNull(prefix);
 
-        // TODO: implement it!
-
-        return this;
+        return new ClusterState(
+                aclsEntries, //TODO: filter ACLs
+                roleBindings, // TODO: filter rolebindings
+                MapTools.filterKeys(topicDescriptions, s -> s.startsWith(prefix)));
     }
 
     @Override
