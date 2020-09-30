@@ -1,9 +1,10 @@
 package net.christophschubert.kafka.clusterstate.formats.ktb;
 
 import net.christophschubert.kafka.clusterstate.ACLEntry;
+import net.christophschubert.kafka.clusterstate.AclEntries;
 import net.christophschubert.kafka.clusterstate.ClusterState;
 import net.christophschubert.kafka.clusterstate.TopicDescription;
-import org.apache.kafka.common.protocol.types.Field;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -53,29 +54,28 @@ public class KtbTopologyConverter {
     }
 
     interface AclClientStrategy<C extends KtbClient> {
-        List<ACLEntry> createEntriesForClientInProject(C client, KtbProject project, TopicNameStrategy strategy);
+        Set<ACLEntry> createEntriesForClientInProject(C client, KtbTopology topology, KtbProject project, TopicNameStrategy nameStrategy);
     }
 
-    static class EmptyAclStrategy implements AclClientStrategy {
-        @Override
-        public List<ACLEntry> createEntriesForClientInProject(KtbClient client, KtbProject project, TopicNameStrategy namingStrategy) {
-            return Collections.EMPTY_LIST;
-        }
-
+    static class EmptyAclStrategy<C extends KtbClient> implements AclClientStrategy<C> {
         private static final EmptyAclStrategy theStrategy = new EmptyAclStrategy();
         static AclClientStrategy get() {
             return theStrategy;
         }
+
+
+        @Override
+        public Set<ACLEntry> createEntriesForClientInProject(C client, KtbTopology topology, KtbProject project, TopicNameStrategy strategy) {
+            return Collections.EMPTY_SET;
+        }
     }
 
     interface AclStrategy {
-        List<ACLEntry> calculateAcls(KtbProject project, TopicNameStrategy nameStrategy);
+        Set<ACLEntry> calculateAcls(KtbTopology topology, KtbProject project, TopicNameStrategy nameStrategy);
     }
 
     static class BaseAclStrategy implements  AclStrategy{
-        //another, generic option would be
-        //public <C extends KtbClient> AclClientStrategy<C> getStrategyForClientClass(Class<C> clazz) {
-        //}
+
         AclClientStrategy<KtbConsumer> consumerStrategy() {
             return EmptyAclStrategy.get();
         };
@@ -87,13 +87,13 @@ public class KtbTopologyConverter {
         }
 
         @Override
-        public List<ACLEntry> calculateAcls(KtbProject project, TopicNameStrategy nameStrategy) {
-            List<ACLEntry> entries = new ArrayList<>();
+        public Set<ACLEntry> calculateAcls(KtbTopology topology, KtbProject project, TopicNameStrategy nameStrategy ) {
+            Set<ACLEntry> entries = new HashSet<>();
             project.producers.forEach(producer ->
-                    entries.addAll(producerStrategy().createEntriesForClientInProject(producer, project, nameStrategy))
+                    entries.addAll(producerStrategy().createEntriesForClientInProject(producer, topology, project, nameStrategy))
             );
             project.consumers.forEach(consumer ->
-                    entries.addAll(consumerStrategy().createEntriesForClientInProject(consumer, project, nameStrategy))
+                    entries.addAll(consumerStrategy().createEntriesForClientInProject(consumer, topology, project, nameStrategy))
             );
             return entries;
         }
@@ -130,25 +130,55 @@ public class KtbTopologyConverter {
         }
     }
 
-    FunctionalAclStrategy replicateKtb = new FunctionalAclStrategy(
-            (consumer, project, nameStrategy) -> {
-                return Collections.EMPTY_LIST;
-            },
-            (consumer, project, nameStrategy) -> {
-                return Collections.EMPTY_LIST;
-            },
-            (consumer, project, nameStrategy) -> {
-                return Collections.EMPTY_LIST;
-            }
+    static FunctionalAclStrategy replicateKtb = new FunctionalAclStrategy(
+            (consumer, topology, project, nameStrategy) ->
+                project.getTopics().stream().flatMap(topic -> {
+                    final String fullTopicName = nameStrategy.topicName(topology, project, topic);
+                    final String groupId = consumer.groupId;
+                    if (StringUtils.isEmpty(groupId)) {
+                        return AclEntries.topicLiteralConsumerWildcard(consumer.principal, fullTopicName).stream();
+                    } else {
+                        return AclEntries.topicLiteralConsumer(consumer.principal, fullTopicName, groupId).stream();
+                    }
+                }).collect(Collectors.toSet())
+            ,
+            //TODO implement logic for connector
+            (connector, topology, project, nameStrategy) -> Collections.EMPTY_SET,
+            (producer, topology, project, nameStrategy) ->
+                    project.getTopics().stream().flatMap(topic -> {
+                        final String fullTopicName = nameStrategy.topicName(topology, project, topic);
+                        return AclEntries.topicLiteralProducer(producer.getPrincipal(), fullTopicName).stream();
+                    }).collect(Collectors.toSet())
         );
 
+    static FunctionalAclStrategy usePrefixedTopicsAcls = new FunctionalAclStrategy(
+            (consumer, topology, project, nameStrategy) -> {
+                final String topicPrefix = nameStrategy.projectPrefix(topology, project);
+                final String groupId = consumer.getGroupId();
+                if (StringUtils.isEmpty(groupId)) {
+                    return AclEntries.topicPrefixConsumerWildcard(consumer.getPrincipal(), topicPrefix);
+                } else {
+                    return AclEntries.topicPrefixConsumer(consumer.getPrincipal(), topicPrefix, groupId);
+                }
+            },
+            //TODO: implement Connector ACLs
+            (connector, topology, project, nameStrategy) -> Collections.EMPTY_SET,
+            (producer, topology, project, nameStrategy) -> {
+                final String topicPrefix = nameStrategy.projectPrefix(topology, project);
+                return AclEntries.topicPrefixProducer(producer.getPrincipal(), topicPrefix);
+            }
+    );
+
     public ClusterState compile(KtbTopology topology, TopicNameStrategy topicNameStrategy, AclStrategy aclStrategy) {
-        final Map<String, TopicDescription> collect = topology.getProjects().stream().flatMap(project ->
-            project.topics.stream().map(topic -> new TopicDescription(
-                    topicNameStrategy.topicName(topology, project, topic), topic.getConfig()))
-        ).collect(Collectors.toMap(td -> td.name(), td -> td));
+        final Map<String, TopicDescription> collect = topology.getProjects().stream()
+                .flatMap(project -> project.topics.stream().map(topic -> {
+                    final String fullTopicName = topicNameStrategy.topicName(topology, project, topic);
+                    return new TopicDescription(fullTopicName, topic.getConfig());
+                }))
+                .collect(Collectors.toMap(td -> td.name(), td -> td));
+
         final Set<ACLEntry> aclEntries = topology.getProjects().stream()
-                .flatMap(ktbProject -> aclStrategy.calculateAcls(ktbProject, topicNameStrategy).stream())
+                .flatMap(ktbProject -> aclStrategy.calculateAcls(topology, ktbProject, topicNameStrategy).stream())
                 .collect(Collectors.toSet());
         // TODO: implement RBAC
         return new ClusterState(aclEntries, Collections.EMPTY_SET, collect);
@@ -156,5 +186,9 @@ public class KtbTopologyConverter {
 
     public ClusterState compileReplicatingKTB(KtbTopology topology) {
         return compile(topology, new MightCauseCollisionTopicNameStrategy("_"), replicateKtb);
+    }
+
+    public ClusterState compileWithPrefixAcls(KtbTopology topology) {
+        return compile(topology, new MightCauseCollisionTopicNameStrategy("_"), usePrefixedTopicsAcls);
     }
 }

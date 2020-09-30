@@ -80,8 +80,9 @@ public class KtbTopology {
         System.out.println(ktbTopology.equals(smurfContext));
 
         KtbTopologyConverter converter = new KtbTopologyConverter();
-        final ClusterState compile = converter.compile(ktbTopology, new KtbTopologyConverter.BoringTopicNameStrategy("."), new KtbTopologyConverter.EmptyAclStrategy());
+        final ClusterState compile = converter.compile(ktbTopology, new KtbTopologyConverter.BoringTopicNameStrategy("."), KtbTopologyConverter.usePrefixedTopicsAcls);
         System.out.println(compile.topicNames());
+       
 
 
     }
