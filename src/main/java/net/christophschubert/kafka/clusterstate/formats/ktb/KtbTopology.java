@@ -82,7 +82,7 @@ public class KtbTopology {
         KtbTopologyConverter converter = new KtbTopologyConverter();
         final ClusterState compile = converter.compile(ktbTopology, new KtbTopologyConverter.BoringTopicNameStrategy("."), KtbTopologyConverter.usePrefixedTopicsAcls);
         System.out.println(compile.topicNames());
-       
+
 
 
     }

@@ -1,16 +1,27 @@
 package net.christophschubert.kafka.clusterstate;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 public class ClusterState {
+    @JsonProperty("aclsEntries")
     Set<ACLEntry> aclsEntries;
+    @JsonProperty("roleBindings")
     Set<RbacRoleBinding> roleBindings;
+    @JsonProperty("topicDescriptions")
     Map<String, TopicDescription> topicDescriptions;
 
-    public ClusterState(Set<ACLEntry> aclsEntries, Set<RbacRoleBinding> roleBindings, Map<String, TopicDescription> topicDescriptions) {
+    @JsonCreator
+    public ClusterState(
+            @JsonProperty("aclsEntries") Set<ACLEntry> aclsEntries,
+            @JsonProperty("roleBindings") Set<RbacRoleBinding> roleBindings,
+            @JsonProperty("topicDescriptions") Map<String, TopicDescription> topicDescriptions
+    ) {
         this.aclsEntries = aclsEntries;
         this.roleBindings = roleBindings;
         this.topicDescriptions = topicDescriptions;
