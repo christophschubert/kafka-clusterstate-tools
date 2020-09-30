@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
-public class KtbProducer {
+public class KtbProducer implements KtbClient{
     String principal;
 
     @JsonCreator

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
-public class KtbConsumer {
+public class KtbConsumer implements KtbClient{
     String principal;
     String groupId;
 
