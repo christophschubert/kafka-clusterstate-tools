@@ -7,14 +7,13 @@ import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.errors.SecurityDisabledException;
 
-import java.awt.image.PackedColorModel;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class ClusterStateManager {
 
-    static ClusterState build(ClientBundle bundle) throws ExecutionException, InterruptedException {
+    public static ClusterState build(ClientBundle bundle) throws ExecutionException, InterruptedException {
         Map<String, TopicDescription> topicDescriptions = new HashMap<>();
         final Set<String> strings = bundle.adminClient.listTopics().names().get();
         final Collection<ConfigResource> collect = strings.stream().map(s -> new ConfigResource(ConfigResource.Type.TOPIC, s)).collect(Collectors.toSet());

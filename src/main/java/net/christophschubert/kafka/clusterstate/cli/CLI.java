@@ -1,6 +1,9 @@
-package net.christophschubert.kafka.clusterstate;
+package net.christophschubert.kafka.clusterstate.cli;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.christophschubert.kafka.clusterstate.ClientBundle;
+import net.christophschubert.kafka.clusterstate.ClusterState;
+import net.christophschubert.kafka.clusterstate.ClusterStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -22,15 +25,11 @@ class CLI {
                     description = "bootstrap server of the cluster to connect too") String bootstrapServer,
             @Option(names = { "-c", "--command-properties"}, paramLabel = "<command properties>",
                     description = "command config file ") File configFile,
+            @Option(names = { "-e", "--env-var-prefix"}, paramLabel = "<prefix>",
+                    description = "prefix for env vars to be added to properties ") String envVarPrefix,
             @Option(names = { "-f", "--file" }, paramLabel = "STATEFILE", description = "filename to store state") File stateFile
     ) throws IOException, ExecutionException, InterruptedException {
-        Properties properties = new Properties();
-        if (configFile != null) {
-            properties.load(new FileReader(configFile));
-        }
-        if (bootstrapServer != null) {
-            properties.put("bootstrap.servers", bootstrapServer);
-        }
+        Properties properties = CLITools.loadProperties(configFile, bootstrapServer, envVarPrefix);
         logger.info(properties.toString());
 
         final ClientBundle bundle = ClientBundle.fromProperties(properties);
