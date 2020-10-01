@@ -1,12 +1,20 @@
 package net.christophschubert.kafka.clusterstate;
 
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class MapTools {
+
+    public static <K,V1, V2> Map<K, V2> mapValues(Map<K, V1> map, Function<V1, V2> valueMapper) {
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> valueMapper.apply(e.getValue())));
+    }
     /**
      * Filter a map to keep those key/value pairs which satisfy a predicate.
      *
@@ -33,5 +41,15 @@ public class MapTools {
         return map.entrySet().stream()
                 .filter(kvEntry -> p.test(kvEntry.getKey()))
                 .collect(Collectors.toMap(e -> keyMapper.apply(e.getKey()), Map.Entry::getValue));
+    }
+
+    public static <K,V> Map<K, List<V>> groupBy(List<V> input, Function<V, K> keyExtractor) {
+        Map<K, List<V>> grouped = new HashMap<>();
+        input.forEach(v -> {
+            final K key = keyExtractor.apply(v);
+            grouped.computeIfAbsent(key, k -> new ArrayList<>());
+            grouped.get(key).add(v);
+        });
+        return grouped;
     }
 }

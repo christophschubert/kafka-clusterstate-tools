@@ -1,6 +1,7 @@
 package net.christophschubert.kafka.clusterstate.cli;
 
 import net.christophschubert.kafka.clusterstate.MapTools;
+import net.christophschubert.kafka.clusterstate.formats.domain.DomainParser;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,7 +9,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 public class CLITools {
@@ -40,5 +43,18 @@ public class CLITools {
         }
 
         return properties;
+    }
+
+    public static Optional<DomainParser.Format> formatFromFileEnding(Path p) {
+        if (p.toString().endsWith(".domj"))
+            return Optional.of(DomainParser.Format.JSON);
+        if (p.toString().endsWith(".domy"))
+            return Optional.of(DomainParser.Format.YAML);
+        return Optional.empty();
+    }
+
+    public static boolean isDomainFile(Path path) {
+        final String s = path.toString();
+        return s.endsWith(".domj") || s.endsWith(".domy");
     }
 }

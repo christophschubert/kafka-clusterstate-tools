@@ -1,0 +1,13 @@
+{
+    "name": "com.smurfs",
+    "projects": [
+        {
+            "name": "retail",
+            "topics": [
+                {
+                    "name": "hello"
+                }
+            ]
+        }
+    ]
+}

@@ -21,7 +21,7 @@ public class CreateTopicAction implements Action {
         //TODO: use configs when creating topic!
         final NewTopic newTopic = new NewTopic(topic.name(), Optional.empty(), Optional.empty());
 
-        bundle.adminClient.createTopics(Collections.singleton(newTopic));
+        bundle.adminClient.createTopics(Collections.singleton(newTopic)).all().get();
         return false;
     }
 }

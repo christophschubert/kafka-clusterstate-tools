@@ -2,11 +2,9 @@ package net.christophschubert.kafka.clusterstate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kafka.common.protocol.types.Field;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class ClusterState {
     @JsonProperty("aclsEntries")
@@ -56,6 +54,24 @@ public class ClusterState {
                 roleBindings, // TODO: filter rolebindings
                 MapTools.filterKeys(topicDescriptions, s -> s.startsWith(prefix)));
     }
+
+    public ClusterState merge(ClusterState other) {
+        Set<RbacRoleBinding> roleBindings = new HashSet<>(this.roleBindings);
+        roleBindings.addAll(other.roleBindings);
+
+        Set<ACLEntry> aclEntries = new HashSet<>(this.aclsEntries);
+        aclEntries.addAll(other.aclsEntries);
+
+        Map<String, TopicDescription> topicDescriptions = new HashMap<>(this.topicDescriptions);
+        topicDescriptions.putAll(other.topicDescriptions);
+        return new ClusterState(
+                aclsEntries,
+                roleBindings,
+                topicDescriptions
+        );
+    }
+
+    public static final ClusterState empty = new ClusterState(Collections.emptySet(), Collections.emptySet(), Collections.emptyMap());
 
     @Override
     public String toString() {

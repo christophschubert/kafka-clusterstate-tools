@@ -1,0 +1,7 @@
+---
+name: test
+projects:
+  - name: helloproj-2
+    topics:
+      - name: topicA1
+      - name: topicB1

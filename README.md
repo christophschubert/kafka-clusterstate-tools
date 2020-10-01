@@ -55,11 +55,38 @@ Then the corresponding actions are performed.
 When performing the actions, the following config options determine whether an individual action will be performed:
   - allowDeletes: are we allowed to delete topics
   - allowEmptyDeletes: are we allowed to delete topics which currently do not contain messages
-  - preserveData: prohibits certain types of config changes, such as shortening the retention time
+  - preserveData: prohibits certain types of config changes, such as shortening the retention time.
 
 #### Remarks
 - `kst` will not delete topics whose names do not start with a prefix which appears in one of the domain files of the context which it is running in.
 Hence you should not split domain files for one domain over multiple contexts (folders).
+
+#### Config and keeping different environments in sync
+`kst` will look for a `kst.properties` file in the current context to read information about
+bootstrap servers, schema registry, and its internal config such as the topic naming strategy from there.
+Using the `--env-var-prefix` command line option it is possible to specify a 
+prefix for environment variables.
+All environment variables with this prefix will have the prefix stripped and will be
+placed into the in-memory configs used to connect to the server, overwriting the values from the properties file
+This can be to keep secrets out of the property files and also to keep different environments in sync.
+
+For example, let us assume we have a PROD and a QA environment which should contain the same topics and 
+have the same schemas and access rights configured. This could be achieved by using the same context and starting `kst` as 
+follows:
+
+```bash
+export KST_PROD_BOOTSTRAP_SERVER=broker0.prod.your.company.internal
+export KST_PROD_SASL_JAAS_CONFIG=.....
+
+export KST_QA_BOOTSTRAP_SERVER=broker0.qa.your.company.internal
+export KST_QA_SASL_JAAS_CONFIG=.....
+
+# update QA
+kst apply --env-var-prefix KST_QA --context .
+
+# update PROD
+kst apply --env-var-prefix KST_PROD --context .
+```
 
 ### Domain file format
 
