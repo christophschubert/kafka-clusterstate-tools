@@ -136,6 +136,16 @@ projects:
         topics: #only access to these topics will be provided
             - topicA
 
+    streamsApps:
+      - principal: "User:xxx"
+        applicationId: aggregator
+        prefixApplicationId: true # true by default
+        inputTopics:    # not provided: access to all topics in the project
+            - topicA
+            - topicB
+        outputTopics:   # not provided: access to all topics in the project
+            - topicC
+            - topicD   
 
     topics:
       - name: testTopic
