@@ -5,3 +5,7 @@ projects:
   topics:
     - name: topicA
     - name: topicB
+  consumers:
+    - principal: "User:xxx"
+      groupId: "groupForApp"
+      prefixGroup: true

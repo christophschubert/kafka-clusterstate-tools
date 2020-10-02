@@ -7,13 +7,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-public class Topic {
-    Project parent;
+public class Topic extends ProjectSubResource {
+
 
     @JsonProperty("name")
-    final String name;
+    public final String name;
     @JsonProperty("configs")
-    final Map<String, String> configs;
+    public final Map<String, String> configs;
 
 
     @JsonCreator
@@ -24,6 +24,8 @@ public class Topic {
         this.name = name;
         this.configs = configs;
     }
+
+
 
     // for quick test case creation
     Topic(String name) {
@@ -52,5 +54,10 @@ public class Topic {
                 ", parent='" + parent.name + '\'' +
                 ", configs=" + configs +
                 '}';
+    }
+
+    @Override
+    public String id() {
+        return name;
     }
 }

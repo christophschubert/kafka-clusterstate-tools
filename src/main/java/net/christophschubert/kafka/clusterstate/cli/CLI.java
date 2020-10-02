@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.christophschubert.kafka.clusterstate.*;
 import net.christophschubert.kafka.clusterstate.actions.Action;
 import net.christophschubert.kafka.clusterstate.formats.domain.Domain;
-import net.christophschubert.kafka.clusterstate.formats.domain.DomainCompiler;
+import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DomainCompiler;
 import net.christophschubert.kafka.clusterstate.formats.domain.DomainParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,13 +14,10 @@ import picocli.CommandLine.Option;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -63,24 +60,20 @@ class CLI {
                 }).collect(Collectors.toList());
 
 
-
         final DomainCompiler compiler = new DomainCompiler();
         final var boringStrategy = new DomainCompiler.BoringStrategy();
         final Map<String, List<Domain>> groupedDomains = MapTools.groupBy(domains, Domain::name);
         final Map<String, ClusterState> clusterStateByDomain = MapTools.mapValues(groupedDomains, domainList ->
                 domainList.stream()
-                        .map(domain -> compiler.compile(domain, boringStrategy, null))
+                        .map(domain -> compiler.compile(domain, boringStrategy, DomainCompiler.es))
                         .reduce(ClusterState.empty, (s1, s2) -> s1.merge(s2)));
-
 
 
         ClientBundle bundle = ClientBundle.fromProperties(properties);
         final ClusterState currentState = ClusterStateManager.build(bundle);
+
         clusterStateByDomain.forEach((domainName, desiredState) -> {
 
-            System.out.println(domainName);
-            System.out.println(desiredState);
-            System.out.println();
 
             final ClusterState clusterDomainState = currentState.filterByPrefix(domainName);
 
@@ -103,9 +96,7 @@ class CLI {
 
 
         //next steps
-        //TODO: write a compile function for a domain
         //TODO: implement filterByPrefix properly on ClusterState
-        //TODO: try to include MockAdminClient into project
 
 
         return 0;

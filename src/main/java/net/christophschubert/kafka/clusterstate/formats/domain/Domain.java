@@ -9,10 +9,10 @@ import java.util.Set;
 
 public class Domain {
     @JsonProperty("name")
-    final String name;
+    public final String name;
 
     @JsonProperty("projects")
-    final Set<Project> projects;
+    public final Set<Project> projects;
 
     void updateChildren() {
         projects.forEach(project -> {

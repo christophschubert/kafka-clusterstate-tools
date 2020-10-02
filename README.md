@@ -109,3 +109,39 @@ This might aid in topic discovery.
 ---
 todo: add it!
 ```
+
+### Which ACLs do I need and which ones will be created
+
+```
+projects:
+  - name: sample-project
+    consumers:
+      - principal: "User:xxx"
+        groupId: group
+        prefixGroup: true
+        topics:      #when the topics are specified, individual ACLs will be created
+            - topicA  
+            - topicB
+      - principal: "User:yyy"
+        groupId: groupY
+        prefixGroup: false #only access to literal groupId are allowed 
+        # no topics field => prefix ACLs on the will be created for this producer
+    producers:
+      - principal: "User:yyy"
+        idempotent: true # false by default, will give principal the idempotent write to the cluster
+        transactionId: "transId"   #producer gets access to this transaction ID
+        # not topics => prefix ACL will be created
+      - principal: "User:zzzz"
+        transactionId: "transId"   #producer gets access to this transaction ID
+        topics: #only access to these topics will be provided
+            - topicA
+
+
+    topics:
+      - name: testTopic
+        consumers: 
+        - [list of users getting access to this topic, 
+            especially useful for wildcard 'User:*']
+
+```
+The topic and group names will be prefixed by the 

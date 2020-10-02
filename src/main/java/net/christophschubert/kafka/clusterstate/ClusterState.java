@@ -56,18 +56,18 @@ public class ClusterState {
     }
 
     public ClusterState merge(ClusterState other) {
-        Set<RbacRoleBinding> roleBindings = new HashSet<>(this.roleBindings);
-        roleBindings.addAll(other.roleBindings);
+        Set<RbacRoleBinding> mergedRoleBindings = new HashSet<>(this.roleBindings);
+        mergedRoleBindings.addAll(other.roleBindings);
 
-        Set<ACLEntry> aclEntries = new HashSet<>(this.aclsEntries);
-        aclEntries.addAll(other.aclsEntries);
+        Set<ACLEntry> mergedAclsEntries = new HashSet<>(this.aclsEntries);
+        mergedAclsEntries.addAll(other.aclsEntries);
 
-        Map<String, TopicDescription> topicDescriptions = new HashMap<>(this.topicDescriptions);
-        topicDescriptions.putAll(other.topicDescriptions);
+        Map<String, TopicDescription> mergedTopicDescriptions = new HashMap<>(this.topicDescriptions);
+        mergedTopicDescriptions.putAll(other.topicDescriptions);
         return new ClusterState(
-                aclsEntries,
-                roleBindings,
-                topicDescriptions
+                mergedAclsEntries,
+                mergedRoleBindings,
+                mergedTopicDescriptions
         );
     }
 
