@@ -9,7 +9,6 @@ import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DefaultS
 import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DomainCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -63,14 +62,14 @@ class CLI {
                 }).collect(Collectors.toList());
 
 
-        final DomainCompiler compiler = new DomainCompiler();
-        final var namingStrategy = new DomainCompiler.BoringStrategy();
-        final var aclStrategy = DefaultStrategies.strategy;
-        final Map<String, List<Domain>> groupedDomains = MapTools.groupBy(domains, Domain::name);
-        final Map<String, ClusterState> clusterStateByDomain = MapTools.mapValues(groupedDomains, domainList ->
-                domainList.stream()
-                        .map(domain -> compiler.compile(domain, namingStrategy, aclStrategy))
-                        .reduce(ClusterState.empty, ClusterState::merge));
+        final DomainCompiler compiler = new DomainCompiler(DefaultStrategies.namingStrategy, DefaultStrategies.aclStrategy);
+
+        final var groupedDomains = MapTools.groupBy(domains, Domain::name);
+        final Map<String, ClusterState> clusterStateByDomain =
+                MapTools.mapValues(groupedDomains, domainList -> domainList.stream()
+                        .map(compiler::compile)
+                        .reduce(ClusterState.empty, ClusterState::merge)
+                );
 
         logger.info("Desired cluster-state by domain-name:");
         clusterStateByDomain.forEach((domainName, desiredState) -> {

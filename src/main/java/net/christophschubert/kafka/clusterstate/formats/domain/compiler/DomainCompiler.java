@@ -14,6 +14,11 @@ import java.util.stream.Collectors;
 
 public class DomainCompiler {
 
+    public DomainCompiler(ResourceNamingStrategy namingStrategy, AclStrategy aclStrategy) {
+        this.namingStrategy = namingStrategy;
+        this.aclStrategy = aclStrategy;
+    }
+
     /**
      * Used to generate fully qualified names for topics, consumer groups as well
      * we project-wide names for prefixed ACLs and role-bindings.
@@ -31,28 +36,21 @@ public class DomainCompiler {
         String projectPrefix(Project project);
     }
 
-    public static class BoringStrategy implements ResourceNamingStrategy {
-
-        @Override
-        public String projectPrefix(Project project) {
-            return project.parent.name() + "_" + project.name + "_";
-        }
-
-    }
 
     interface AclStrategy {
         Set<ACLEntry> aclsForProject(Project project, ResourceNamingStrategy namingStrategy);
     }
 
+    private final ResourceNamingStrategy namingStrategy;
+    private final AclStrategy aclStrategy;
+
     /**
      * Convert a Domain description to a (desired) ClusterState.
      *
      * @param domain the domain to compile
-     * @param namingStrategy how to name resources
-     * @param aclStrategy how to set ACLs
      * @return A ClusterState representing the Domain.
      */
-    public ClusterState compile(Domain domain, ResourceNamingStrategy namingStrategy, AclStrategy aclStrategy) {
+    public ClusterState compile(Domain domain) {
 
         final Map<String, TopicDescription> topics = domain.projects.stream()
                 .flatMap(project -> project.topics.stream())

@@ -10,12 +10,22 @@ import java.util.Set;
 
 public class DefaultStrategies {
 
+    public static final DomainCompiler.ResourceNamingStrategy namingStrategy = new BoringStrategy();
+
+    public static class BoringStrategy implements DomainCompiler.ResourceNamingStrategy {
+        @Override
+        public String projectPrefix(Project project) {
+            return project.parent.name() + "_" + project.name + "_";
+        }
+    }
+
+
     /**
      * The default ACL strategy, represents best practices and tries to use minimal ACLs.
      *
      * Could be used as a starting point for different ACL assignment.
      */
-    public static final ExtensibleAclStrategy strategy = new ExtensibleAclStrategy(
+    public static final ExtensibleAclStrategy aclStrategy = new ExtensibleAclStrategy(
             new ConsumerAclStrategy(),
             new DefaultProducerAclStrategy(),
             new DefaultStreamsAppAclStrategy()
