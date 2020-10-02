@@ -3,11 +3,14 @@ package net.christophschubert.kafka.clusterstate.formats.domain.compiler;
 import net.christophschubert.kafka.clusterstate.ACLEntry;
 import net.christophschubert.kafka.clusterstate.AclEntries;
 import net.christophschubert.kafka.clusterstate.formats.domain.*;
+import org.apache.kafka.common.acl.AclOperation;
+import org.apache.kafka.common.resource.ResourceType;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DefaultStrategies {
 
@@ -51,17 +54,9 @@ public class DefaultStrategies {
         public Set<ACLEntry> acls(Consumer consumer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
             final Project project = consumer.parent;
             final String groupId = namingStrategy.name(consumer);
-
-            if (consumer.topics.isEmpty()) {
-                return AclEntries.topicPrefixConsumer(consumer.principal, namingStrategy.projectPrefix(project), groupId, consumer.prefixGroup);
-            } else {
-                // we have a non-empty list of topics => create ACLs-entries for each of them
-                return consumer.topics.stream().flatMap(topicName ->
-                        AclEntries.topicLiteralConsumer(consumer.principal, namingStrategy.name(project, topicName), groupId, consumer.prefixGroup).stream())
-                        .collect(Collectors.toSet());
-
-            }
+            return readAcls(consumer.principal, project, groupId, consumer.prefixGroup, consumer.topics, namingStrategy);
         }
+
     }
 
     //TODO: add descriptions of produced ACLs
@@ -70,36 +65,64 @@ public class DefaultStrategies {
         @Override
         public Set<ACLEntry> acls(Producer producer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
             final Project project = producer.parent;
-            if (producer.topics.isEmpty()) {
-                return AclEntries.topicPrefixProducer(producer.principal, namingStrategy.projectPrefix(project));
-            } else {
-                return producer.topics.stream().flatMap(topicName ->
-                        AclEntries.topicLiteralProducer(producer.principal, namingStrategy.name(project, topicName)).stream()
-                ).collect(Collectors.toSet());
-            }
+            return writeAcls(producer.principal, project, producer.topics, namingStrategy);
+
+            //TODO: add rights to access transactionalId if specified
         }
     }
 
-    //TODO: add description of produced ACLs
+    /**
+     *
+     */
     static class DefaultStreamsAppAclStrategy implements ExtensibleAclStrategy.ResourceAclStrategy<StreamsApp> {
 
         @Override
         public Set<ACLEntry> acls(StreamsApp streamsApp, DomainCompiler.ResourceNamingStrategy namingStrategy) {
             final var principal = streamsApp.principal;
-            final var projectPrefix = namingStrategy.projectPrefix(streamsApp.parent);
-            final Set<ACLEntry> aclEntries = new HashSet<>();
+            final var project = streamsApp.parent;
+            final String qualifiedName = namingStrategy.name(streamsApp);
 
             //first make app producer and consumer of all topics (prefixed)
-            aclEntries.addAll( AclEntries.topicPrefixProducer(principal, projectPrefix) );
-            aclEntries.addAll( AclEntries.topicPrefixConsumer(principal, projectPrefix, streamsApp.applicationId));
+            final Set<ACLEntry> aclEntries = new HashSet<>();
+            aclEntries.addAll(writeAcls(principal, project, streamsApp.outputTopics, namingStrategy));
+            aclEntries.addAll(readAcls(principal, project, qualifiedName, streamsApp.prefixApplicationId, streamsApp.inputTopics, namingStrategy));
 
-            //TODO: think about which additional rights we need?
-            //  - transactional ID?
-            //  - rights to create/access internal topics -- for this we should also export
-            //    the fully qualified application ID.
+            //add prefix ACLs for transaction ID
+            aclEntries.add( AclEntries.allowAnyHostPrefix(AclOperation.DESCRIBE, principal, qualifiedName, ResourceType.TRANSACTIONAL_ID));
+            aclEntries.add( AclEntries.allowAnyHostPrefix(AclOperation.WRITE, principal, qualifiedName, ResourceType.TRANSACTIONAL_ID));
 
+            //give prefixed rights for all internal topics. These will be generated with the applicationId as prefix
+            final var internalTopicAcls = Stream.of(AclOperation.READ, AclOperation.DELETE, AclOperation.WRITE, AclOperation.CREATE)
+                    .map(op -> AclEntries.allowAnyHostPrefix(op, principal, qualifiedName, ResourceType.TOPIC))
+                    .collect(Collectors.toSet());
+            aclEntries.addAll(internalTopicAcls);
+            // according to
+            // https://docs.confluent.io/current/streams/developer-guide/security.html
+            // we still need to add DESCRIBE on the consumer group: need to check this!
             return aclEntries;
         }
     }
 
+
+    static Set<ACLEntry> writeAcls(String principal, Project project, Set<String> topicNames, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        if (topicNames.isEmpty()) {
+            return AclEntries.topicPrefixProducer(principal, namingStrategy.projectPrefix(project));
+        } else {
+            return topicNames.stream().flatMap(topicName ->
+                    AclEntries.topicLiteralProducer(principal, namingStrategy.name(project, topicName)).stream()
+            ).collect(Collectors.toSet());
+        }
+    }
+
+
+    static Set<ACLEntry> readAcls(String principal, Project project, String groupId, boolean isPrefixGroup, Set<String> topicNames, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        if (topicNames.isEmpty()) {
+            return AclEntries.topicPrefixConsumer(principal, namingStrategy.projectPrefix(project), groupId, isPrefixGroup);
+        } else {
+            // we have a non-empty list of topics => create ACLs-entries for each of them
+            return topicNames.stream().flatMap(topicName ->
+                    AclEntries.topicLiteralConsumer(principal, namingStrategy.name(project, topicName), groupId, isPrefixGroup).stream())
+                    .collect(Collectors.toSet());
+        }
+    }
 }
