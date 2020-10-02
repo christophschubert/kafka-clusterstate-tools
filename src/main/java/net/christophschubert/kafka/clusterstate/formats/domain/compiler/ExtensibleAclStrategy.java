@@ -6,20 +6,28 @@ import net.christophschubert.kafka.clusterstate.formats.domain.*;
 import java.util.HashSet;
 import java.util.Set;
 
-class ExtensibleAclStrategy implements DomainCompiler.AclStrategy {
+/**
+ * Implements a visitor pattern with the configurable sub-strategies for
+ * consumer, producer, and streaming apps.
+ */
+public class ExtensibleAclStrategy implements DomainCompiler.AclStrategy {
 
-    public interface SubAclStrategy<R extends ProjectSubResource> {
+    /**
+     * Functional interface to compute the ACLs for a sub-resource (e.g., consumer, producer).
+     * @param <R> type of the resource.
+     */
+    public interface ResourceAclStrategy<R extends ProjectSubResource> {
         Set<ACLEntry> acls(R resource, DomainCompiler.ResourceNamingStrategy namingStrategy);
     }
 
-    private final SubAclStrategy<Consumer> consumerSubAclStrategy;
-    private final SubAclStrategy<Producer> producerSubAclStrategy;
-    private final SubAclStrategy<StreamsApp> streamsAppSubAclStrategy;
+    private final ResourceAclStrategy<Consumer> consumerSubAclStrategy;
+    private final ResourceAclStrategy<Producer> producerSubAclStrategy;
+    private final ResourceAclStrategy<StreamsApp> streamsAppSubAclStrategy;
 
-    ExtensibleAclStrategy(
-            SubAclStrategy<Consumer> consumerSubAclStrategy,
-            SubAclStrategy<Producer> producerSubAclStrategy,
-            SubAclStrategy<StreamsApp> streamsAppSubAclStrategy
+    public ExtensibleAclStrategy(
+            ResourceAclStrategy<Consumer> consumerSubAclStrategy,
+            ResourceAclStrategy<Producer> producerSubAclStrategy,
+            ResourceAclStrategy<StreamsApp> streamsAppSubAclStrategy
     ) {
         this.consumerSubAclStrategy = consumerSubAclStrategy;
         this.producerSubAclStrategy = producerSubAclStrategy;

@@ -44,19 +44,14 @@ public class DomainCompiler {
         Set<ACLEntry> aclsForProject(Project project, ResourceNamingStrategy namingStrategy);
     }
 
-
-
-
-
-
-    public static ExtensibleAclStrategy es = new ExtensibleAclStrategy(
-            new DefaultStrategies.ConsumerAclStrategy(),
-            new DefaultStrategies.DefaultProducerAclStrategy(),
-            new DefaultStrategies.DefaultStreamsAppAclStrategy()
-    );
-
-
-
+    /**
+     * Convert a Domain description to a (desired) ClusterState.
+     *
+     * @param domain the domain to compile
+     * @param namingStrategy how to name resources
+     * @param aclStrategy how to set ACLs
+     * @return A ClusterState representing the Domain.
+     */
     public ClusterState compile(Domain domain, ResourceNamingStrategy namingStrategy, AclStrategy aclStrategy) {
 
         final Map<String, TopicDescription> topics = domain.projects.stream()

@@ -8,14 +8,25 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-class DefaultStrategies {
+public class DefaultStrategies {
+
+    /**
+     * The default ACL strategy, represents best practices and tries to use minimal ACLs.
+     *
+     * Could be used as a starting point for different ACL assignment.
+     */
+    public static final ExtensibleAclStrategy strategy = new ExtensibleAclStrategy(
+            new ConsumerAclStrategy(),
+            new DefaultProducerAclStrategy(),
+            new DefaultStreamsAppAclStrategy()
+    );
 
     /**
      * Placeholder implementation which return an empty ACL set.
      *
      * @param <R> type of the Resource
      */
-    static class EmptyAclStrategy<R extends ProjectSubResource> implements ExtensibleAclStrategy.SubAclStrategy<R> {
+    static class EmptyAclStrategy<R extends ProjectSubResource> implements ExtensibleAclStrategy.ResourceAclStrategy<R> {
 
         @Override
         public Set<ACLEntry> acls(R resource, DomainCompiler.ResourceNamingStrategy namingStrategy) {
@@ -23,7 +34,7 @@ class DefaultStrategies {
         }
     }
 
-    static class ConsumerAclStrategy implements ExtensibleAclStrategy.SubAclStrategy<Consumer> {
+    static class ConsumerAclStrategy implements ExtensibleAclStrategy.ResourceAclStrategy<Consumer> {
         @Override
         public Set<ACLEntry> acls(Consumer consumer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
             final Project project = consumer.parent;
@@ -32,7 +43,7 @@ class DefaultStrategies {
         }
     }
 
-    static class DefaultProducerAclStrategy implements ExtensibleAclStrategy.SubAclStrategy<Producer> {
+    static class DefaultProducerAclStrategy implements ExtensibleAclStrategy.ResourceAclStrategy<Producer> {
 
         @Override
         public Set<ACLEntry> acls(Producer producer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
@@ -42,7 +53,7 @@ class DefaultStrategies {
         }
     }
 
-    static class DefaultStreamsAppAclStrategy implements ExtensibleAclStrategy.SubAclStrategy<StreamsApp> {
+    static class DefaultStreamsAppAclStrategy implements ExtensibleAclStrategy.ResourceAclStrategy<StreamsApp> {
 
         @Override
         public Set<ACLEntry> acls(StreamsApp streamsApp, DomainCompiler.ResourceNamingStrategy namingStrategy) {

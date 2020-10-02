@@ -11,7 +11,8 @@ public class ClusterStateDiff {
     final Set<ACLEntry> deletedAclEntries;
     final Map<String, TopicDescription> addedTopics;
     final Set<String> deletedTopicNames;
-    final Map<String, Pair<TopicDescription, TopicDescription>> updatedTopicConfigs;
+    final Map<String, Update<TopicDescription>> updatedTopicConfigs;
+
      //TODO: add added/deleted RBAC bindings
 
     public ClusterStateDiff(ClusterState before, ClusterState after) {
@@ -38,7 +39,7 @@ public class ClusterStateDiff {
             final Map<String, String> beforeConfigs = before.topicDescriptions.get(topicName).configs();
             final Map<String, String> afterConfigs = after.topicDescriptions.get(topicName).configs();
             if (!beforeConfigs.equals(afterConfigs)) {
-                updatedTopicConfigs.put(topicName, Pair.of(before.topicDescriptions.get(topicName), after.topicDescriptions.get(topicName)));
+                updatedTopicConfigs.put(topicName, Update.of(before.topicDescriptions.get(topicName), after.topicDescriptions.get(topicName)));
             }
         });
     }

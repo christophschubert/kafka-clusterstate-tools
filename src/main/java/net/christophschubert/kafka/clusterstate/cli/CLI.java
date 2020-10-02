@@ -4,15 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.christophschubert.kafka.clusterstate.*;
 import net.christophschubert.kafka.clusterstate.actions.Action;
 import net.christophschubert.kafka.clusterstate.formats.domain.Domain;
-import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DomainCompiler;
 import net.christophschubert.kafka.clusterstate.formats.domain.DomainParser;
+import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DefaultStrategies;
+import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DomainCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
@@ -61,20 +64,23 @@ class CLI {
 
 
         final DomainCompiler compiler = new DomainCompiler();
-        final var boringStrategy = new DomainCompiler.BoringStrategy();
+        final var namingStrategy = new DomainCompiler.BoringStrategy();
+        final var aclStrategy = DefaultStrategies.strategy;
         final Map<String, List<Domain>> groupedDomains = MapTools.groupBy(domains, Domain::name);
         final Map<String, ClusterState> clusterStateByDomain = MapTools.mapValues(groupedDomains, domainList ->
                 domainList.stream()
-                        .map(domain -> compiler.compile(domain, boringStrategy, DomainCompiler.es))
-                        .reduce(ClusterState.empty, (s1, s2) -> s1.merge(s2)));
+                        .map(domain -> compiler.compile(domain, namingStrategy, aclStrategy))
+                        .reduce(ClusterState.empty, ClusterState::merge));
 
+        logger.info("Desired cluster-state by domain-name:");
+        clusterStateByDomain.forEach((domainName, desiredState) -> {
+            logger.info("\t" + domainName + ": " + desiredState + "\n");
+        });
 
-        ClientBundle bundle = ClientBundle.fromProperties(properties);
+        final ClientBundle bundle = ClientBundle.fromProperties(properties);
         final ClusterState currentState = ClusterStateManager.build(bundle);
 
         clusterStateByDomain.forEach((domainName, desiredState) -> {
-
-
             final ClusterState clusterDomainState = currentState.filterByPrefix(domainName);
 
             final ClusterStateDiff stateDiff = new ClusterStateDiff(clusterDomainState, desiredState);
@@ -86,18 +92,14 @@ class CLI {
             actions.forEach(action -> {
                 try {
                     action.runRaw(bundle);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
+                    logger.info("Ran " + action);
+                } catch (InterruptedException | ExecutionException e) {
+                    logger.error("Failed action " + action, e);
                 }
             });
         });
 
-
-        //next steps
         //TODO: implement filterByPrefix properly on ClusterState
-
 
         return 0;
     }
