@@ -24,7 +24,7 @@ public class ClusterStateDiff {
         this.deletedAclEntries = deletedAclEntries;
 
         final HashMap<String, TopicDescription> addedTopics = new HashMap<>(after.topicDescriptions);
-        before.topicDescriptions.keySet().forEach(topicName -> addedTopics.remove(topicName));
+        before.topicDescriptions.keySet().forEach(addedTopics::remove);
         this.addedTopics = addedTopics;
 
         final HashSet<String> deletedTopicNames = new HashSet<>(before.topicDescriptions.keySet());
