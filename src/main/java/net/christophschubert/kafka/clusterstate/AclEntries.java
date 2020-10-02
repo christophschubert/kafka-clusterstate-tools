@@ -41,6 +41,11 @@ public class AclEntries {
         );
     }
 
+    public static Set<ACLEntry> topicLiteralConsumer(String principal, String topicName, String groupId, boolean prefixGroup) {
+        return prefixGroup ? topicLiteralConsumerPrefix(principal, topicName, groupId) :
+                topicLiteralConsumer(principal, topicName, groupId);
+    }
+
     public static Set<ACLEntry> topicLiteralConsumerPrefix(String principal, String topicName, String groupIdPrefix) {
         return Set.of(
                 allowAnyHostLiteral(AclOperation.DESCRIBE, principal, topicName, ResourceType.TOPIC),
@@ -62,6 +67,11 @@ public class AclEntries {
                 allowAnyHostPrefix(AclOperation.READ, principal, topicNamePrefix, ResourceType.TOPIC),
                 allowAnyHostLiteral(AclOperation.READ, principal, groupId, ResourceType.GROUP)
         );
+    }
+
+    public static Set<ACLEntry> topicPrefixConsumer(String principal, String topicNamePrefix, String groupId, boolean prefixGroup) {
+        return prefixGroup ? topicPrefixConsumerPrefix(principal, topicNamePrefix, groupId) :
+                topicPrefixConsumer(principal, topicNamePrefix, groupId);
     }
 
     /**

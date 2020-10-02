@@ -5,6 +5,8 @@ projects:
   topics:
     - name: topicA
     - name: topicB
+      dataModel:
+        valueSchemaFile: test.avsc
   consumers:
     - principal: "User:xxx"
       groupId: "groupForApp"

@@ -7,6 +7,7 @@ import net.christophschubert.kafka.clusterstate.formats.domain.*;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DefaultStrategies {
 
@@ -44,25 +45,42 @@ public class DefaultStrategies {
         }
     }
 
+    //TODO: add descriptions of produced ACLs
     static class ConsumerAclStrategy implements ExtensibleAclStrategy.ResourceAclStrategy<Consumer> {
         @Override
         public Set<ACLEntry> acls(Consumer consumer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
             final Project project = consumer.parent;
-            //TODO: add logic for 'topics' field if present!
-            return AclEntries.topicPrefixConsumer(consumer.principal, namingStrategy.projectPrefix(project), namingStrategy.name(consumer));
+            final String groupId = namingStrategy.name(consumer);
+
+            if (consumer.topics.isEmpty()) {
+                return AclEntries.topicPrefixConsumer(consumer.principal, namingStrategy.projectPrefix(project), groupId, consumer.prefixGroup);
+            } else {
+                // we have a non-empty list of topics => create ACLs-entries for each of them
+                return consumer.topics.stream().flatMap(topicName ->
+                        AclEntries.topicLiteralConsumer(consumer.principal, namingStrategy.name(project, topicName), groupId, consumer.prefixGroup).stream())
+                        .collect(Collectors.toSet());
+
+            }
         }
     }
 
+    //TODO: add descriptions of produced ACLs
     static class DefaultProducerAclStrategy implements ExtensibleAclStrategy.ResourceAclStrategy<Producer> {
 
         @Override
         public Set<ACLEntry> acls(Producer producer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
             final Project project = producer.parent;
-            //TODO: add logic for 'topics' field if present!
-            return AclEntries.topicPrefixProducer(producer.principal, namingStrategy.projectPrefix(project));
+            if (producer.topics.isEmpty()) {
+                return AclEntries.topicPrefixProducer(producer.principal, namingStrategy.projectPrefix(project));
+            } else {
+                return producer.topics.stream().flatMap(topicName ->
+                        AclEntries.topicLiteralProducer(producer.principal, namingStrategy.name(project, topicName)).stream()
+                ).collect(Collectors.toSet());
+            }
         }
     }
 
+    //TODO: add description of produced ACLs
     static class DefaultStreamsAppAclStrategy implements ExtensibleAclStrategy.ResourceAclStrategy<StreamsApp> {
 
         @Override

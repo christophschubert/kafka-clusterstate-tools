@@ -14,7 +14,7 @@ public class Consumer extends ProjectSubResource {
     public final String groupId;
 
     @JsonProperty("prefixGroup")
-    boolean prefixGroup;
+    public boolean prefixGroup;
 
     @JsonProperty("topics")
     public final Set<String> topics;

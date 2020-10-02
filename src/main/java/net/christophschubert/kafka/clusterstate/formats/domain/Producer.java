@@ -14,7 +14,7 @@ public class Producer extends ProjectSubResource {
     public final String transactionId;
 
     @JsonProperty("idempotent")
-    public final boolean idempotent;
+    public final boolean idempotent; //TODO: remove this property: belongs to principal management
 
     @JsonProperty("topics")
     public final Set<String> topics;

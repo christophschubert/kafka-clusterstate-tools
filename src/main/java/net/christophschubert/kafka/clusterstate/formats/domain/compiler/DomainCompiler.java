@@ -30,7 +30,11 @@ public class DomainCompiler {
      */
     interface ResourceNamingStrategy {
         default String name(ProjectSubResource resource) {
-            return projectPrefix(resource.parent) + resource.id();
+            return name(resource.parent, resource.id());
+        }
+
+        default String name(Project project, String resourceName) {
+            return projectPrefix(project) + resourceName;
         }
 
         String projectPrefix(Project project);

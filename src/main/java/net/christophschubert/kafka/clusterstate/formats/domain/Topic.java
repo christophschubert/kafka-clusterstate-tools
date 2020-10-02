@@ -15,14 +15,18 @@ public class Topic extends ProjectSubResource {
     @JsonProperty("configs")
     public final Map<String, String> configs;
 
+    @JsonProperty("dataModel")
+    public final DataModel dataModel;
 
     @JsonCreator
     public Topic(
             @JsonProperty("name") String name,
-            @JsonProperty("configs") Map<String, String> configs
+            @JsonProperty("configs") Map<String, String> configs,
+            @JsonProperty("dataModel") DataModel dataModel
     ) {
         this.name = name;
         this.configs = configs;
+        this.dataModel = dataModel;
     }
 
 
@@ -31,6 +35,7 @@ public class Topic extends ProjectSubResource {
     Topic(String name) {
         this.name = name;
         this.configs = Collections.emptyMap();
+        this.dataModel = null;
     }
 
     @Override
@@ -39,12 +44,12 @@ public class Topic extends ProjectSubResource {
         if (!(o instanceof Topic)) return false;
         Topic topic = (Topic) o;
         return Objects.equals(configs, topic.configs) &&
-                Objects.equals(name, topic.name);
+                Objects.equals(name, topic.name) && Objects.equals(dataModel, topic.dataModel) ;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, configs);
+        return Objects.hash(name, configs, dataModel);
     }
 
     @Override
@@ -53,6 +58,7 @@ public class Topic extends ProjectSubResource {
                 "name='" + name + '\'' +
                 ", parent='" + parent.name + '\'' +
                 ", configs=" + configs +
+                ", dataModel=" + dataModel +
                 '}';
     }
 

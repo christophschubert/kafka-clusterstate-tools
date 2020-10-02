@@ -61,6 +61,8 @@ class CLI {
                     return Stream.empty();
                 }).collect(Collectors.toList());
 
+        System.out.println(domains);
+
 
         final DomainCompiler compiler = new DomainCompiler(DefaultStrategies.namingStrategy, DefaultStrategies.aclStrategy);
 
@@ -84,10 +86,8 @@ class CLI {
 
             final ClusterStateDiff stateDiff = new ClusterStateDiff(clusterDomainState, desiredState);
 
-            final ClusterStateManager clusterStateManager = new ClusterStateManager();
+            final List<Action> actions = new ClusterStateManager().buildActionList(stateDiff);
 
-            final List<Action> actions = clusterStateManager.buildActionList(stateDiff);
-            System.out.println(actions.size());
             actions.forEach(action -> {
                 try {
                     action.runRaw(bundle);
