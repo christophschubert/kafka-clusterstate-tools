@@ -1,14 +1,13 @@
 package net.christophschubert.kafka.clusterstate.formats.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class Project {
-
+    @JsonIgnore
     public Domain parent;
 
     @JsonProperty("name")
@@ -82,5 +81,63 @@ public class Project {
                 ", producers=" + producers +
                 ", streamsApps=" + streamsApps +
                 '}';
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static Builder builder(String name) {
+        return new Builder(name);
+    }
+
+
+    public static class Builder {
+        Domain parent = null;
+        Set<Topic> topics = new HashSet<>();
+        String name = "defaultProject";
+        Set<Consumer> consumers = new HashSet<>();
+        Set<Producer> producers = new HashSet<>();
+        Set<StreamsApp> streamsApps = new HashSet<>();
+
+        private Builder() {}
+
+        Builder(String name) {
+            this.name = name;
+        }
+
+        public Builder addProducer(Producer p) {
+            producers.add(p);
+            return this;
+        }
+
+        public Builder addProducer(String principal) {
+            producers.add(new Producer(principal, null, false, null));
+            return this;
+        }
+
+        public Builder addTopic(Topic topic) {
+            topics.add(topic);
+            return this;
+        }
+
+        public Builder addTopic(String topicName) {
+            topics.add(new Topic(topicName));
+            return this;
+        }
+
+        public Project build() {
+            final Project p = new Project(
+                    name,
+                    topics,
+                    consumers,
+                    producers,
+                    streamsApps
+            );
+            //make sure that p has a proper parent:
+            if (parent == null)
+                new Domain("defaultDomain", Set.of(p));
+            return p;
+        }
     }
 }

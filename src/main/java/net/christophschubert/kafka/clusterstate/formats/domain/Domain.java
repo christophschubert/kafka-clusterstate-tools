@@ -17,7 +17,7 @@ public class Domain {
     void updateChildren() {
         projects.forEach(project -> {
             project.parent = this;
-            project.updateChildren();
+            //project.updateChildren();
         });
     }
 

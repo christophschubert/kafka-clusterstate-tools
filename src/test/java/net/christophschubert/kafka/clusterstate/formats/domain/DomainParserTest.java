@@ -12,8 +12,8 @@ public class DomainParserTest {
     @Test
     public void jsonRoundTrip() throws JsonProcessingException {
         final Domain domain = new Domain("dname", Set.of(
-                new Project("projectA", Set.of(new Topic("topic1"), new Topic("topic2"))),
-                new Project("projectB", Set.of(new Topic("topic3"), new Topic("topic4")))
+                Project.builder("projectA").addTopic("topic1").addTopic("topic2").build(),
+                Project.builder("projectB").addTopic("topic3").addTopic("topic4").build()
         ));
 
         final DomainParser parser = new DomainParser();
@@ -32,8 +32,8 @@ public class DomainParserTest {
     @Test
     public void yamlRoundTrip() throws JsonProcessingException {
         final Domain domain = new Domain("dname", Set.of(
-                new Project("projectA", Set.of(new Topic("topic1"), new Topic("topic2"))),
-                new Project("projectB", Set.of(new Topic("topic3"), new Topic("topic4")))
+                Project.builder("projectA").addTopic("topic1").addTopic("topic2").build(),
+                Project.builder("projectB").addTopic("topic3").addTopic("topic4").build()
         ));
 
         final DomainParser parser = new DomainParser();

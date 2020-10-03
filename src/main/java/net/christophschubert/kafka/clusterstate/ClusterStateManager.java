@@ -1,6 +1,7 @@
 package net.christophschubert.kafka.clusterstate;
 
 import net.christophschubert.kafka.clusterstate.actions.*;
+import org.apache.kafka.clients.admin.AlterConfigOp;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
@@ -23,7 +24,7 @@ public class ClusterStateManager {
         final Collection<ConfigResource> collect = strings.stream().map(s -> new ConfigResource(ConfigResource.Type.TOPIC, s)).collect(Collectors.toSet());
         bundle.adminClient.describeConfigs(collect).all().get().forEach((resource, config) ->
                 topicDescriptions.put(resource.name(),
-                        new TopicDescription(resource.name(), config.entries().stream().collect( Collectors.toMap(ConfigEntry::name, ConfigEntry::value)
+                        new TopicDescription(resource.name(), config.entries().stream().collect(Collectors.toMap(ConfigEntry::name, ConfigEntry::value)
                         )))
         );
         Set<ACLEntry> aclEntries = Collections.emptySet();
@@ -44,6 +45,89 @@ public class ClusterStateManager {
 
 
 
+    interface TopicConfigUpdatePolicy {
+        List<Action> calcChanges(
+                String topicName, Update<Map<String, String>> configChange);
+    }
+
+    static class DoNothingPolicy implements TopicConfigUpdatePolicy {
+        @Override
+        public List<Action> calcChanges(
+                String topicName, Update<Map<String, String>> configChange) {
+            return Collections.emptyList();
+        }
+    }
+
+    static class IncrementalUpdateNoCheck implements TopicConfigUpdatePolicy {
+        /**
+         * Incrementally applies the new settings from 'desiredConfig'.
+         *
+         * <p> Settings which are part of currentConfig but not of desiredConfig will not be changed.
+         *
+         * @param topicName
+         * @param configChange
+         * @return
+         **/
+
+        @Override
+        public List<Action> calcChanges(
+                String topicName, Update<Map<String, String>> configChange) {
+            Map<String, String> updatedConfigs = new HashMap<>();
+
+            configChange.after.forEach(
+                    (dKey, dValue) -> {
+                        final var current = configChange.before;
+                        if (current.containsKey(dKey) || !current.get(dKey).equals(dValue)) {
+                            updatedConfigs.put(dKey, dValue);
+                        }
+                    });
+            final IncrementallyUpdateTopicAction action =
+                    new IncrementallyUpdateTopicAction(topicName, updatedConfigs);
+            return Collections.singletonList(action);
+        }
+    }
+
+    static class IncrementallyUpdateTopicAction implements Action {
+
+        final String topicName;
+        final Map<String, String> topicConfig;
+
+        IncrementallyUpdateTopicAction(String topicName, Map<String, String> topicConfig) {
+            this.topicName = topicName;
+            this.topicConfig = topicConfig;
+        }
+
+        @Override
+        public String toString() {
+            return "Action: update settings for topic  " + topicName + " " + topicConfig;
+        }
+
+        @Override
+        public boolean runRaw(ClientBundle bundle) throws InterruptedException, ExecutionException {
+            final var adminClient = bundle.adminClient;
+            Collection<AlterConfigOp> ops = new ArrayList<>();
+
+            topicConfig.forEach(
+                    (k, v) -> {
+                        ConfigEntry entry = new ConfigEntry(k, v);
+                        AlterConfigOp op = new AlterConfigOp(entry, AlterConfigOp.OpType.SET);
+                        ops.add(op);
+                    });
+            Map<ConfigResource, Collection<AlterConfigOp>> stuff =
+                    Collections.singletonMap(new ConfigResource(ConfigResource.Type.TOPIC, topicName), ops);
+
+            try {
+                adminClient.incrementalAlterConfigs(stuff).all().get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+                return false;
+            }
+            return true;
+        }
+    }
+
+
+    TopicConfigUpdatePolicy topicConfigUpdatePolicy = new IncrementalUpdateNoCheck();
 
     public List<Action> buildActionList(ClusterStateDiff diff) {
         List<Action> actions = new ArrayList<>();
@@ -56,8 +140,11 @@ public class ClusterStateManager {
         diff.deletedTopicNames.forEach(topicName -> actions.add(new DeleteTopicAction(topicName)));
         diff.addedTopics.forEach((topicName, topicDescription) -> actions.add(new CreateTopicAction(topicDescription)));
 
-        //TODO: add logic for updates
+        //TODO: add changes for role-bindings
 
+        diff.updatedTopicConfigs.values().stream()
+                .flatMap(u -> topicConfigUpdatePolicy.calcChanges(u.after.name(), u.map(TopicDescription::configs)).stream())
+                .forEach(actions::add);
         return actions;
     }
 }

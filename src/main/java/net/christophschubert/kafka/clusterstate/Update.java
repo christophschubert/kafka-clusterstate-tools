@@ -1,7 +1,8 @@
 package net.christophschubert.kafka.clusterstate;
 
 import java.util.Objects;
-//TODO: remove this class and replace with before/after pair
+import java.util.function.Function;
+
 public class Update<T> {
     public final T before;
     public final T after;
@@ -13,6 +14,10 @@ public class Update<T> {
 
     public static <T> Update<T> of(T before, T after) {
         return new Update(before, after);
+    }
+
+    public <U> Update<U> map(Function<T, U> f) {
+        return Update.of(f.apply(before), f.apply(after));
     }
 
     @Override
