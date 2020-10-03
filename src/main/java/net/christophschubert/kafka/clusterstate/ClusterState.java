@@ -2,7 +2,6 @@ package net.christophschubert.kafka.clusterstate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kafka.common.protocol.types.Field;
 
 import java.util.*;
 
@@ -14,15 +13,20 @@ public class ClusterState {
     @JsonProperty("topicDescriptions")
     Map<String, TopicDescription> topicDescriptions;
 
+    @JsonProperty("managedTopicPrefixes")
+    Set<String> managedTopicPrefixes;
+
     @JsonCreator
     public ClusterState(
             @JsonProperty("aclsEntries") Set<ACLEntry> aclsEntries,
             @JsonProperty("roleBindings") Set<RbacRoleBinding> roleBindings,
-            @JsonProperty("topicDescriptions") Map<String, TopicDescription> topicDescriptions
+            @JsonProperty("topicDescriptions") Map<String, TopicDescription> topicDescriptions,
+            @JsonProperty("managedTopicPrefixes") Set<String> managedTopicPrefixes
     ) {
         this.aclsEntries = aclsEntries;
         this.roleBindings = roleBindings;
         this.topicDescriptions = topicDescriptions;
+        this.managedTopicPrefixes = managedTopicPrefixes;
     }
 
     /**
@@ -52,26 +56,33 @@ public class ClusterState {
         return new ClusterState(
                 aclsEntries, //TODO: filter ACLs
                 roleBindings, // TODO: filter rolebindings
-                MapTools.filterKeys(topicDescriptions, s -> s.startsWith(prefix)));
-    }
-
-    public ClusterState merge(ClusterState other) {
-        Set<RbacRoleBinding> mergedRoleBindings = new HashSet<>(this.roleBindings);
-        mergedRoleBindings.addAll(other.roleBindings);
-
-        Set<ACLEntry> mergedAclsEntries = new HashSet<>(this.aclsEntries);
-        mergedAclsEntries.addAll(other.aclsEntries);
-
-        Map<String, TopicDescription> mergedTopicDescriptions = new HashMap<>(this.topicDescriptions);
-        mergedTopicDescriptions.putAll(other.topicDescriptions);
-        return new ClusterState(
-                mergedAclsEntries,
-                mergedRoleBindings,
-                mergedTopicDescriptions
+                MapTools.filterKeys(topicDescriptions, s -> s.startsWith(prefix)),
+                managedTopicPrefixes // TODO: should this be filtered?
         );
     }
 
-    public static final ClusterState empty = new ClusterState(Collections.emptySet(), Collections.emptySet(), Collections.emptyMap());
+    public ClusterState merge(ClusterState other) {
+        final var mergedRoleBindings = Sets.union(this.roleBindings, other.roleBindings);
+        final var mergedAclEntries = Sets.union(this.aclsEntries, other.aclsEntries);
+        final var mergedTopicDescriptions = new HashMap<>(this.topicDescriptions);
+        mergedTopicDescriptions.putAll(other.topicDescriptions);
+
+        return new ClusterState(
+                mergedAclEntries,
+                mergedRoleBindings,
+                mergedTopicDescriptions,
+                Sets.union(this.managedTopicPrefixes, other.managedTopicPrefixes)
+        );
+    }
+
+
+
+    public static final ClusterState empty = new ClusterState(
+            Collections.emptySet(),
+            Collections.emptySet(),
+            Collections.emptyMap(),
+            Collections.emptySet()
+    );
 
     @Override
     public String toString() {
@@ -79,6 +90,7 @@ public class ClusterState {
                 "aclsEntries=" + aclsEntries +
                 ", roleBindings=" + roleBindings +
                 ", topicDescriptions=" + topicDescriptions +
+                ", managedTopicPrefixes=" + managedTopicPrefixes +
                 '}';
     }
 }

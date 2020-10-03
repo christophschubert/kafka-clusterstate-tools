@@ -3,6 +3,8 @@ package net.christophschubert.kafka.clusterstate.formats.domain.compiler;
 import net.christophschubert.kafka.clusterstate.ACLEntry;
 import net.christophschubert.kafka.clusterstate.ClusterState;
 import net.christophschubert.kafka.clusterstate.TopicDescription;
+import net.christophschubert.kafka.clusterstate.TopicSchemaData;
+import net.christophschubert.kafka.clusterstate.formats.domain.DataModel;
 import net.christophschubert.kafka.clusterstate.formats.domain.Domain;
 import net.christophschubert.kafka.clusterstate.formats.domain.Project;
 import net.christophschubert.kafka.clusterstate.formats.domain.ProjectSubResource;
@@ -48,6 +50,13 @@ public class DomainCompiler {
     private final ResourceNamingStrategy namingStrategy;
     private final AclStrategy aclStrategy;
 
+    TopicSchemaData fromDataModel(DataModel dm) {
+        if (dm == null) {
+            return new TopicSchemaData(null, null);
+        }
+        return new TopicSchemaData(dm.keySchemaFile, dm.keySchemaFile);
+    }
+
     /**
      * Convert a Domain description to a (desired) ClusterState.
      *
@@ -60,14 +69,29 @@ public class DomainCompiler {
                 .flatMap(project -> project.topics.stream())
                 .collect(Collectors.toMap(
                         namingStrategy::name,
-                        topic -> new TopicDescription(namingStrategy.name(topic), topic.configs)
+                        topic -> new TopicDescription(namingStrategy.name(topic), topic.configs,
+                                fromDataModel(topic.dataModel))
                 ));
 
         final var acls = domain.projects.stream()
                 .flatMap(project -> aclStrategy.aclsForProject(project, namingStrategy).stream())
                 .collect(Collectors.toSet());
 
+        // get all fully qualified application IDs
+        final String streamsInternalTopicSeparator = "-";
+
+        // we add the separator (which is actually an implementation detail) to ensure
+        // that removal of one streams app does not imply removal of internal topics
+        // of another streams app whose name extends the first app's name.
+        // otherwise we would have to ensure that no application id is another
+        // application id's prefix
+        final var streamsInternalTopicPrefixes = domain.projects.stream()
+                .flatMap(project -> project.streamsApps.stream())
+                .map(namingStrategy::name)
+                .map(s -> s + streamsInternalTopicSeparator)
+                .collect(Collectors.toSet());
+
         //TODO: add code to generate RBAC role bindings
-        return new ClusterState(acls, Collections.emptySet(), topics);
+        return new ClusterState(acls, Collections.emptySet(), topics, streamsInternalTopicPrefixes);
     }
 }

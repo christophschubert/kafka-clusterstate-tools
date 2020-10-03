@@ -24,8 +24,11 @@ public class ClusterStateManager {
         final Collection<ConfigResource> collect = strings.stream().map(s -> new ConfigResource(ConfigResource.Type.TOPIC, s)).collect(Collectors.toSet());
         bundle.adminClient.describeConfigs(collect).all().get().forEach((resource, config) ->
                 topicDescriptions.put(resource.name(),
-                        new TopicDescription(resource.name(), config.entries().stream().collect(Collectors.toMap(ConfigEntry::name, ConfigEntry::value)
-                        )))
+                        new TopicDescription(
+                                resource.name(),
+                                config.entries().stream().collect(Collectors.toMap(ConfigEntry::name, ConfigEntry::value)),
+                                null //currently, we do not extract Schemas from cluster
+                        ))
         );
         Set<ACLEntry> aclEntries = Collections.emptySet();
         try {
@@ -40,7 +43,12 @@ public class ClusterStateManager {
             }
         }
         // TODO: extract RoleBindings
-        return new ClusterState(aclEntries, Collections.emptySet(), topicDescriptions);
+        return new ClusterState(
+                aclEntries,
+                Collections.emptySet(),
+                topicDescriptions,
+                Collections.emptySet() //we currently no not track managed prefixes
+        );
     }
 
 
@@ -137,14 +145,21 @@ public class ClusterStateManager {
         diff.addedAclEntries.forEach(aclEntry -> actions.add(new CreateAclAction(aclEntry)));
 
         //TODO: add logic to check for deletes
-        diff.deletedTopicNames.forEach(topicName -> actions.add(new DeleteTopicAction(topicName)));
+        diff.deletedTopicNames.stream().forEach(topicName -> actions.add(new DeleteTopicAction(topicName)));
         diff.addedTopics.forEach((topicName, topicDescription) -> actions.add(new CreateTopicAction(topicDescription)));
-
-        //TODO: add changes for role-bindings
 
         diff.updatedTopicConfigs.values().stream()
                 .flatMap(u -> topicConfigUpdatePolicy.calcChanges(u.after.name(), u.map(TopicDescription::configs)).stream())
                 .forEach(actions::add);
+
+        //TODO: add changes for role-bindings
+
+        //TODO: questions to consider:
+        // how to register schemas for internal streams topics?
+
+        diff.addedSchemaPaths.forEach((topicName, schemaData) -> actions.add(
+                new RegisterSchemaAction(topicName, schemaData)
+        ));
         return actions;
     }
 }

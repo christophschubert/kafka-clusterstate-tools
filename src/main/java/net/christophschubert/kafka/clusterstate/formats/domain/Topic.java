@@ -25,7 +25,7 @@ public class Topic extends ProjectSubResource {
             @JsonProperty("dataModel") DataModel dataModel
     ) {
         this.name = name;
-        this.configs = configs;
+        this.configs = configs == null ? Collections.emptyMap() : configs;
         this.dataModel = dataModel;
     }
 

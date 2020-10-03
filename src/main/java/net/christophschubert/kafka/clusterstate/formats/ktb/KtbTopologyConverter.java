@@ -173,7 +173,7 @@ public class KtbTopologyConverter {
         final Map<String, TopicDescription> collect = topology.getProjects().stream()
                 .flatMap(project -> project.topics.stream().map(topic -> {
                     final String fullTopicName = topicNameStrategy.topicName(topology, project, topic);
-                    return new TopicDescription(fullTopicName, topic.getConfig());
+                    return new TopicDescription(fullTopicName, topic.getConfig(),null);
                 }))
                 .collect(Collectors.toMap(td -> td.name(), td -> td));
 
@@ -181,7 +181,7 @@ public class KtbTopologyConverter {
                 .flatMap(ktbProject -> aclStrategy.calculateAcls(topology, ktbProject, topicNameStrategy).stream())
                 .collect(Collectors.toSet());
         // TODO: implement RBAC
-        return new ClusterState(aclEntries, Collections.EMPTY_SET, collect);
+        return new ClusterState(aclEntries, Collections.emptySet(), collect, Collections.emptySet());
     }
 
     public ClusterState compileReplicatingKTB(KtbTopology topology) {
