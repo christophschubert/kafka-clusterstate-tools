@@ -6,7 +6,11 @@ projects:
     - name: topicA
     - name: topicB
       dataModel:
-        valueSchemaFile: "schemas/test.avsc"
+        key:
+          type: String
+        value:
+          type: Avro
+          schemaFile: "schemas/test.avsc"
   consumers:
     - principal: "User:xxx"
       groupId: "groupForApp"

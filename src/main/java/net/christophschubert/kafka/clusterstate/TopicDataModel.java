@@ -1,21 +1,21 @@
-package net.christophschubert.kafka.clusterstate.formats.domain;
+package net.christophschubert.kafka.clusterstate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
-public class DataModel {
+public class TopicDataModel {
     @JsonProperty("key")
-    public final TypeInformation key;
+    public final SerializationInfo key;
 
     @JsonProperty("value")
-    public final TypeInformation value;
+    public final SerializationInfo value;
 
     @JsonCreator
-    public DataModel(
-            @JsonProperty("key") TypeInformation key,
-            @JsonProperty("value") TypeInformation value
+    public TopicDataModel(
+            @JsonProperty("key") SerializationInfo key,
+            @JsonProperty("value") SerializationInfo value
     ) {
         this.key = key;
         this.value = value;
@@ -24,10 +24,10 @@ public class DataModel {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DataModel)) return false;
-        DataModel dataModel = (DataModel) o;
-        return Objects.equals(key, dataModel.key) &&
-                Objects.equals(value, dataModel.value);
+        if (!(o instanceof TopicDataModel)) return false;
+        TopicDataModel that = (TopicDataModel) o;
+        return Objects.equals(key, that.key) &&
+                Objects.equals(value, that.value);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class DataModel {
 
     @Override
     public String toString() {
-        return "DataModel{" +
+        return "TopicDataModel{" +
                 "key=" + key +
                 ", value=" + value +
                 '}';

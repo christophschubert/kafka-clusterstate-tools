@@ -1,9 +1,6 @@
 package net.christophschubert.kafka.clusterstate.formats.domain.compiler;
 
-import net.christophschubert.kafka.clusterstate.ACLEntry;
-import net.christophschubert.kafka.clusterstate.ClusterState;
-import net.christophschubert.kafka.clusterstate.TopicDescription;
-import net.christophschubert.kafka.clusterstate.TopicSchemaData;
+import net.christophschubert.kafka.clusterstate.*;
 import net.christophschubert.kafka.clusterstate.formats.domain.DataModel;
 import net.christophschubert.kafka.clusterstate.formats.domain.Domain;
 import net.christophschubert.kafka.clusterstate.formats.domain.Project;
@@ -50,12 +47,21 @@ public class DomainCompiler {
     private final ResourceNamingStrategy namingStrategy;
     private final AclStrategy aclStrategy;
 
-    TopicSchemaData fromDataModel(DataModel dm) {
+    TopicDataModel convertDataModel(DataModel dm) {
 
         if (dm == null) {
-            return new TopicSchemaData(null, null);
+            return new TopicDataModel(null, null);
         }
-        return new TopicSchemaData(dm.keySchemaFile, dm.valueSchemaFile);
+        //TODO: refactor this mess!
+        SerializationInfo key = null;
+        SerializationInfo value = null;
+        if (dm.key != null) {
+            key = new SerializationInfo(dm.key.type, dm.key.schemaFile);
+        }
+        if (dm.value != null) {
+            value = new SerializationInfo(dm.value.type, dm.value.schemaFile);
+        }
+        return new TopicDataModel(key, value);
     }
 
     /**
@@ -71,7 +77,7 @@ public class DomainCompiler {
                 .collect(Collectors.toMap(
                         namingStrategy::name,
                         topic -> new TopicDescription(namingStrategy.name(topic), topic.configs,
-                                    fromDataModel(topic.dataModel))
+                                    convertDataModel(topic.dataModel))
                 ));
 
         final var acls = domain.projects.stream()

@@ -96,7 +96,16 @@ name: store.pos.checkout
 projects:
 - name: projectA
   topics:
-  - name
+  - name: topicA
+    dataModel:
+      key:
+        type: String
+      value:
+        type: Avro
+        schemaFile: "schemas/test.avsc"
+      headers:
+        - keyName: correlationId
+          description: "A correlation Id set by process addCorrelationId" 
 ```
 
 User are free to add further meta-data to the domain files.

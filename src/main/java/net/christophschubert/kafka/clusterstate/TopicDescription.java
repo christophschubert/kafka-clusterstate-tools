@@ -7,11 +7,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Map;
+import java.util.Objects;
 
 public class TopicDescription {
     private final String name;
     private final Map<String, String> configs;
-    private final TopicSchemaData schemaData;
+    private final TopicDataModel dataModel;
 
     @JsonGetter
     public String name() {
@@ -22,18 +23,33 @@ public class TopicDescription {
         return configs;
     }
 
-    @JsonGetter("schemaData")
-    public TopicSchemaData schemaData() { return schemaData; }
+    @JsonGetter("dataModel")
+    public TopicDataModel dataModel() { return dataModel; }
 
     @JsonCreator
     public TopicDescription(
             @JsonProperty("name") String name,
             @JsonProperty("configs") Map<String, String> configs,
-            @JsonProperty("schemaData") TopicSchemaData schemaData
+            @JsonProperty("dataModel") TopicDataModel dataModel
     ) {
         this.name = name;
         this.configs = configs;
-        this.schemaData = schemaData;
+        this.dataModel = dataModel;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TopicDescription)) return false;
+        TopicDescription that = (TopicDescription) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(configs, that.configs) &&
+                Objects.equals(dataModel, that.dataModel);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, configs, dataModel);
     }
 
     @Override
@@ -41,20 +57,7 @@ public class TopicDescription {
         return "TopicDescription{" +
                 "name='" + name + '\'' +
                 ", configs=" + configs +
-                ", schemaData=" + schemaData +
+                ", dataModel=" + dataModel +
                 '}';
-    }
-
-
-    public static void main(String[] args) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-
-        TopicDescription td = new TopicDescription("hello", Map.of("k1", "v1", "k2", "v2"), new TopicSchemaData("keyf", "valuef"));
-
-
-        final String ser = mapper.writer().writeValueAsString(td);
-        System.out.println(ser);
-        final var topicDescription = mapper.readValue(ser, TopicDescription.class);
-        System.out.println(topicDescription);
     }
 }

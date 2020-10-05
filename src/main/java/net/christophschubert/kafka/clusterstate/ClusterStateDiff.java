@@ -1,7 +1,6 @@
 package net.christophschubert.kafka.clusterstate;
 
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -12,7 +11,7 @@ public class ClusterStateDiff {
     final Map<String, TopicDescription> addedTopics;
     final Set<String> deletedTopicNames;
     final Map<String, Update<TopicDescription>> updatedTopicConfigs;
-    final Map<String, TopicSchemaData> addedSchemaPaths;
+    final Map<String, TopicDataModel> addedSchemaPaths;
 
      //TODO: add added/deleted RBAC bindings
 
@@ -50,7 +49,7 @@ public class ClusterStateDiff {
 
         //currently, we just consider all schemas to be new
         this.addedSchemaPaths =
-        MapTools.mapValues(after.topicDescriptions, TopicDescription::schemaData);
+        MapTools.mapValues(after.topicDescriptions, TopicDescription::dataModel);
     }
 
 
