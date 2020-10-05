@@ -22,7 +22,7 @@ public class TopicDescription {
         return configs;
     }
 
-    @JsonGetter
+    @JsonGetter("schemaData")
     public TopicSchemaData schemaData() { return schemaData; }
 
     @JsonCreator
@@ -49,10 +49,12 @@ public class TopicDescription {
     public static void main(String[] args) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
 
-        TopicDescription td = new TopicDescription("hello", Map.of("k1", "v1", "k2", "v2"), null);
-        System.out.println(mapper.writer().writeValueAsString(td));
+        TopicDescription td = new TopicDescription("hello", Map.of("k1", "v1", "k2", "v2"), new TopicSchemaData("keyf", "valuef"));
 
-        final String ser = "{\"name\":\"hello\",\"configs\":{\"k1\":\"v1\",\"k2\":\"v2\"}}";
-        System.out.println(mapper.readValue(ser, TopicDescription.class));
+
+        final String ser = mapper.writer().writeValueAsString(td);
+        System.out.println(ser);
+        final var topicDescription = mapper.readValue(ser, TopicDescription.class);
+        System.out.println(topicDescription);
     }
 }

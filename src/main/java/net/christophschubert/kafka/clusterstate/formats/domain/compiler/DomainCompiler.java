@@ -51,10 +51,11 @@ public class DomainCompiler {
     private final AclStrategy aclStrategy;
 
     TopicSchemaData fromDataModel(DataModel dm) {
+
         if (dm == null) {
             return new TopicSchemaData(null, null);
         }
-        return new TopicSchemaData(dm.keySchemaFile, dm.keySchemaFile);
+        return new TopicSchemaData(dm.keySchemaFile, dm.valueSchemaFile);
     }
 
     /**
@@ -70,7 +71,7 @@ public class DomainCompiler {
                 .collect(Collectors.toMap(
                         namingStrategy::name,
                         topic -> new TopicDescription(namingStrategy.name(topic), topic.configs,
-                                fromDataModel(topic.dataModel))
+                                    fromDataModel(topic.dataModel))
                 ));
 
         final var acls = domain.projects.stream()

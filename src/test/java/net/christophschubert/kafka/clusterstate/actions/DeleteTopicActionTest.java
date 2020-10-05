@@ -6,6 +6,7 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -31,7 +32,7 @@ public class DeleteTopicActionTest {
 
         addTopics(adminClient, Set.of(topicToDelete, remainingTopic));
 
-        ClientBundle bundle = new ClientBundle(adminClient);
+        ClientBundle bundle = new ClientBundle(adminClient, new File("."));
 
         assertEquals(2, adminClient.listTopics().names().get().size());
 

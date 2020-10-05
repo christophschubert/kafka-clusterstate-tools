@@ -78,7 +78,7 @@ class CLI {
             logger.info("\t" + domainName + ": " + desiredState + "\n");
         });
 
-        final ClientBundle bundle = ClientBundle.fromProperties(properties);
+        final ClientBundle bundle = ClientBundle.fromProperties(properties, contextPath);
         final ClusterState currentState = ClusterStateManager.build(bundle);
 
         clusterStateByDomain.forEach((domainName, desiredState) -> {
@@ -116,7 +116,7 @@ class CLI {
         Properties properties = CLITools.loadProperties(configFile, bootstrapServer, envVarPrefix);
         logger.info(properties.toString());
 
-        final ClientBundle bundle = ClientBundle.fromProperties(properties);
+        final ClientBundle bundle = ClientBundle.fromProperties(properties, new File("."));
         final ClusterState clusterState = ClusterStateManager.build(bundle);
 
         final ObjectMapper mapper = new ObjectMapper();
