@@ -5,16 +5,14 @@ import org.apache.kafka.clients.admin.AlterConfigOp;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.common.config.ConfigResource;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 public class IncrementallyUpdateTopicAction implements Action {
 
-    final String topicName;
-    final Map<String, String> topicConfig;
+    private final String topicName;
+    private final Map<String, String> topicConfig;
 
     public IncrementallyUpdateTopicAction(String topicName, Map<String, String> topicConfig) {
         this.topicName = topicName;
@@ -28,26 +26,16 @@ public class IncrementallyUpdateTopicAction implements Action {
 
     @Override
     public boolean runRaw(ClientBundle bundle) throws InterruptedException, ExecutionException {
-        final var adminClient = bundle.adminClient;
-
-        try {
-            adminClient.incrementalAlterConfigs(buildParameters()).all().get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
+        bundle.adminClient.incrementalAlterConfigs(buildParameters()).all().get();
+        return false;
     }
 
     Map<ConfigResource, Collection<AlterConfigOp>> buildParameters() {
-        Collection<AlterConfigOp> ops = new ArrayList<>();
-
-        topicConfig.forEach(
-                (k, v) -> {
-                    ConfigEntry entry = new ConfigEntry(k, v);
-                    AlterConfigOp op = new AlterConfigOp(entry, AlterConfigOp.OpType.SET);
-                    ops.add(op);
-                });
-        return Collections.singletonMap(new ConfigResource(ConfigResource.Type.TOPIC, topicName), ops);
+        final var configOps = topicConfig.entrySet().stream()
+                .map(e -> new ConfigEntry(e.getKey(), e.getValue()))
+                .map(ce -> new AlterConfigOp(ce, AlterConfigOp.OpType.SET))
+                .collect(Collectors.toSet());
+        final var configResource = new ConfigResource(ConfigResource.Type.TOPIC, topicName);
+        return Collections.singletonMap(configResource, configOps);
     }
 }
