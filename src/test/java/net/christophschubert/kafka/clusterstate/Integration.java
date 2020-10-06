@@ -17,7 +17,7 @@ public class Integration {
         Properties cloudProperties = new Properties();
         cloudProperties.load(new FileInputStream("_christoph-cloud.properties"));
 
-        final ClientBundle bundle = new ClientBundle(KafkaAdminClient.create(cloudProperties), new File("."));
+        final ClientBundle bundle = ClientBundle.fromProperties(cloudProperties, new File("."));
 
         final ClusterState build = ClusterStateManager.build(bundle);
         System.out.println(build);

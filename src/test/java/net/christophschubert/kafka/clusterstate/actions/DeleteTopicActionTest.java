@@ -1,5 +1,6 @@
 package net.christophschubert.kafka.clusterstate.actions;
 
+import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient;
 import net.christophschubert.kafka.clusterstate.ClientBundle;
 import org.apache.kafka.clients.admin.MockAdminClient;
 import org.apache.kafka.common.Node;
@@ -32,7 +33,7 @@ public class DeleteTopicActionTest {
 
         addTopics(adminClient, Set.of(topicToDelete, remainingTopic));
 
-        ClientBundle bundle = new ClientBundle(adminClient, new File("."));
+        ClientBundle bundle = new ClientBundle(adminClient, new MockSchemaRegistryClient(), new File("."));
 
         assertEquals(2, adminClient.listTopics().names().get().size());
 

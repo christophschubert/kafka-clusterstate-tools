@@ -28,7 +28,7 @@ public class IncrementalUpdateNoCheck implements TopicConfigUpdatePolicy {
         configChange.after.forEach(
                 (dKey, dValue) -> {
                     final var current = configChange.before;
-                    if (current.containsKey(dKey) || !current.get(dKey).equals(dValue)) {
+                    if (current.containsKey(dKey) && !current.get(dKey).equals(dValue)) {
                         updatedConfigs.put(dKey, dValue);
                     }
                 });
