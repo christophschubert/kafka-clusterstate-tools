@@ -114,6 +114,10 @@ This will be ignored by the parser.
 For example, the following domain has been enriched with descriptions and tags.
 This might aid in topic discovery. 
 
+`kst` will try to register schemas for keys or values whose type are any one of `Avro`, `Protobuf`, or `JSONSchema`.
+The registered schema will be taken from the file specified under `schemaFile`.
+The path of `schemaFile` is relative to the given context.
+
 ```yaml
 ---
 todo: add it!

@@ -3,6 +3,8 @@ package net.christophschubert.kafka.clusterstate.actions;
 import io.confluent.kafka.schemaregistry.avro.AvroSchema;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
+import io.confluent.kafka.schemaregistry.json.JsonSchema;
+import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
 import net.christophschubert.kafka.clusterstate.ClientBundle;
 import net.christophschubert.kafka.clusterstate.SerializationInfo;
 import org.slf4j.Logger;
@@ -17,6 +19,11 @@ import java.util.Map;
 
 
 public class RegisterSchemaAction implements Action {
+
+    public static final Map<String, String> tagToProviderType =
+            Map.of("Avro", AvroSchema.TYPE,
+                    "JSONSchema", JsonSchema.TYPE,
+                    "ProtoBuf", ProtobufSchema.TYPE);
 
     private static final Logger logger = LoggerFactory.getLogger(RegisterSchemaAction.class);
 
@@ -43,7 +50,7 @@ public class RegisterSchemaAction implements Action {
         final var subject = topicName + tagToSuffix.get(keyOrValue);
 
         try {
-            loadAndRegisterSchema(schemaRegistryClient, subject, path);
+            loadAndRegisterSchema(schemaRegistryClient, subject, path, tagToProviderType.getOrDefault(serializationInfo.type, serializationInfo.type));
         } catch (RestClientException | IOException e) {
             logger.error("registering schema for subject " + subject + " failed", e);
         }
@@ -52,15 +59,15 @@ public class RegisterSchemaAction implements Action {
     }
 
 
-    void loadAndRegisterSchema(SchemaRegistryClient client, String subject, Path schemaFile) throws IOException, RestClientException {
+    int loadAndRegisterSchema(SchemaRegistryClient client, String subject, Path schemaFile, String type) throws IOException, RestClientException {
         final var schemaString = Files.readString(schemaFile);
-        //TODO: add support for JSON/protobuf
-
-        final var parsedSchema = client.parseSchema(AvroSchema.TYPE, schemaString, Collections.emptyList());
+        final var parsedSchema = client.parseSchema(type, schemaString, Collections.emptyList());
         if (parsedSchema.isPresent()) {
             final var id = client.register(subject, parsedSchema.get());
             logger.info("Registered schema for subject " + subject + " with id: " + id);
+            return id;
         }
+        return -1;
     }
 
     @Override

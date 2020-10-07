@@ -78,14 +78,14 @@ public class ClusterStateManager {
         // how to register schemas for internal streams topics?
 
         diff.addedSchemaPaths.forEach((topicName, schemaData) -> {
-            final String avroTag = "Avro";
+            final var schemaTags = RegisterSchemaAction.tagToProviderType.keySet();
             final var key = schemaData.key;
-            if (key != null && key.type.equals(avroTag)) {
-                actions.add(new RegisterSchemaAction(topicName, "key",schemaData.key));
+            if (key != null && schemaTags.contains(key.type)) {
+                actions.add(new RegisterSchemaAction(topicName, "key", schemaData.key));
             }
             final var value = schemaData.value;
-            if (value != null && value.type.equals(avroTag)) {
-                actions.add(new RegisterSchemaAction(topicName, "value",schemaData.value));
+            if (value != null && schemaTags.contains(value.type)) {
+                actions.add(new RegisterSchemaAction(topicName, "value", schemaData.value));
             }
         });
         return actions;
