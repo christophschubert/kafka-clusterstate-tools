@@ -8,9 +8,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MdsClient {
 
@@ -93,8 +93,7 @@ public class MdsClient {
         final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 204) {
-            //TODO: proper error handling
-            throw new Exception(response.toString());
+            throw exceptionFromResponse(response);
         }
     }
 
@@ -113,8 +112,7 @@ public class MdsClient {
         final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 204) {
-            //TODO: proper error handling
-            throw new Exception(response.toString());
+            throw exceptionFromResponse(response);
         }
     }
 
@@ -134,7 +132,7 @@ public class MdsClient {
         if (response.statusCode() == 200) {
             return mapper.readValue(response.body(), new TypeReference<List<ResourcePattern>>() {});
         }
-        throw new Exception(); //TODO: proper error handling
+        throw exceptionFromResponse(response);
     }
 
 
@@ -155,7 +153,7 @@ public class MdsClient {
         final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 204) {
-            throw new Exception(); //TODO: proper error handling
+            throw exceptionFromResponse(response);
         }
     }
 
@@ -176,7 +174,7 @@ public class MdsClient {
         final var response = post(endpoint, new ResourceResponse(scope, resources));
 
         if (response.statusCode() != 204) {
-            throw new Exception(); //TODO: proper error handling
+            throw exceptionFromResponse(response);
         }
     }
 
@@ -201,13 +199,18 @@ public class MdsClient {
         final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 204) {
-            throw new Exception(); //TODO: proper error handling
+            throw exceptionFromResponse(response);
         }
     }
 
 
-
-
+    MdsRestException exceptionFromResponse(HttpResponse<String> response) {
+        return new MdsRestException(
+                response.statusCode(),
+                response.uri().toString(),
+                response.body()
+        );
+    }
 
 
 
@@ -253,7 +256,7 @@ public class MdsClient {
             return mapper.readValue(response.body(), new TypeReference<Map<String, Map<String, List<ResourcePattern>>>>() {
             });
         }
-        throw new Exception(); //TODO: proper error handling
+        throw exceptionFromResponse(response);
     }
 
 
@@ -270,7 +273,7 @@ public class MdsClient {
         if (response.statusCode() == 200) {
             return mapper.readValue(response.body(), List.class);
         }
-        throw new Exception(); //TODO: proper error handling
+        throw exceptionFromResponse(response);
     }
 
     /**
@@ -303,8 +306,7 @@ public class MdsClient {
         if (response.statusCode() == 200) {
             return mapper.readValue(response.body(), List.class);
         }
-        System.out.println(response.body());
-        throw new Exception(); //TODO: proper error handling
+        throw exceptionFromResponse(response);
     }
 
 
@@ -350,6 +352,46 @@ public class MdsClient {
         System.out.println(client.principalsForResource("ResourceOwner", "Group", "schema-registry",kafkaScope));
 
 //        System.out.println(client.lookupRolebindings("User:barnie", "ResourceOwner", kafkaScope));
+
+        //strategy to extract all RBAC role bindings:
+        // 1. list all rolenames
+        // 2. for a fixed scope (just one Kafka cluster in the MVP), get all principals who have the given role
+        // 3. for each principal, get all rolebindings
+
+        final var roleNames = client.roleNames();
+        System.out.println(roleNames);
+        final var allPrincipals = roleNames.stream().flatMap(roleName -> {
+            try { //TODO: fix this mess!
+                return client.principalsForRole(roleName, kafkaScope).stream();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Stream.empty();
+            }
+        }).collect(Collectors.toSet());
+        System.out.println(allPrincipals);
+
+        Set<RbacBinding> rbacBindings = new HashSet<>();
+        allPrincipals.forEach(principal -> {
+            try {
+                final var bfp = client.bindingsForPrincipal(principal, kafkaScope);
+                System.out.println("    " + bfp);
+                bfp.forEach((bindingPrincipal, rbs) -> {
+                  rbs.forEach((roleName, patters) -> {
+                      if (patters.isEmpty()) {
+                          rbacBindings.add(new RbacBinding(bindingPrincipal, roleName, ResourcePattern.CLUSTERPATTERN));
+                      }
+                      for (ResourcePattern pattern : patters) {
+                          rbacBindings.add(new RbacBinding(bindingPrincipal, roleName, pattern));
+                      }
+                  });
+                });
+            } catch (Exception e) {
+
+            }});
+
+        System.out.println("all bindings");
+        rbacBindings.forEach(System.out::println);
+
     }
 
 }

@@ -7,6 +7,8 @@ import java.util.Objects;
 
 //TODO:
 public class ResourcePattern {
+    public static final ResourcePattern CLUSTERPATTERN = new ResourcePattern("", "","");
+
     @JsonProperty("resourceType")
     public final String resourceType;
 
