@@ -1,0 +1,34 @@
+---
+name: test
+projects:
+- name: configTestProject
+  topics:
+    - name: topicA
+      configs:
+        "num.partitions": "12"
+        "cleanup.policy": "compact"
+        "segment.ms": "12000"
+      dataModel:
+        key:
+          type: String
+        value:
+          type: Avro
+          schemaFile: "schemas/topicA.avsc"
+    - name: topicB
+      dataModel:
+        key:
+          type: String
+        value:
+          type: Protobuf
+          schemaFile: "schemas/topicB.proto"
+    - name: topicC
+      dataModel:
+        key:
+          type: String
+        value:
+          type: JSON
+          schemaFile: "schemas/topicC.json"
+  consumers:
+    - principal: "User:xxx"
+      groupId: "groupForApp"
+      prefixGroup: true
