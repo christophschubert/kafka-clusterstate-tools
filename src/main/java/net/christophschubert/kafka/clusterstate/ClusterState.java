@@ -54,12 +54,14 @@ public class ClusterState {
         Objects.requireNonNull(prefix);
 
         return new ClusterState(
-                aclsEntries, //TODO: filter ACLs
+                Sets.filter(aclsEntries, aclEntry -> aclEntry.resourceName().startsWith(prefix)),
                 roleBindings, // TODO: filter rolebindings
                 MapTools.filterKeys(topicDescriptions, s -> s.startsWith(prefix)),
                 managedTopicPrefixes // TODO: should this be filtered?
         );
     }
+
+
 
     public ClusterState merge(ClusterState other) {
         final var mergedRoleBindings = Sets.union(this.roleBindings, other.roleBindings);
