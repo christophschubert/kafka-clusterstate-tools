@@ -8,9 +8,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class MdsClient {
 
@@ -130,7 +131,8 @@ public class MdsClient {
         final var endpoint = "/security/1.0/principals/" + principal + "/roles/" + roleName + "/resources";
         final var response = post(endpoint, scope);
         if (response.statusCode() == 200) {
-            return mapper.readValue(response.body(), new TypeReference<List<ResourcePattern>>() {});
+            return mapper.readValue(response.body(), new TypeReference<List<ResourcePattern>>() {
+            });
         }
         throw exceptionFromResponse(response);
     }
@@ -158,11 +160,11 @@ public class MdsClient {
     }
 
 
-
     /**
-     *  Incrementally remove the resources from the principal at the given scope/cluster using the given role.
+     * Incrementally remove the resources from the principal at the given scope/cluster using the given role.
+     * <p>
+     * Wraps DELETE /security/1.0/principals/{principal}/roles/{roleName}/bindings
      *
-     *  Wraps DELETE /security/1.0/principals/{principal}/roles/{roleName}/bindings
      * @param principal
      * @param roleName
      * @param scope
@@ -179,11 +181,9 @@ public class MdsClient {
     }
 
 
-
-
     /**
      * Overwrite existing resource grants.
-     *
+     * <p>
      * Wraps PUT /security/1.0/principals/{principal}/roles/{roleName}/bindings
      *
      * @param principal
@@ -213,33 +213,31 @@ public class MdsClient {
     }
 
 
-
     /**
      * Returns the effective list of role names for a principal.
-     *
+     * <p>
      * Wraps POST /security/1.0/lookup/principals/{principal}/roleNames
      *
      * @param principal
      * @param scope
      * @return
      */
-    public List<String> roleNamesForPrincipal(String principal, Scope scope) throws Exception {
+    public Set<String> roleNamesForPrincipal(String principal, Scope scope) throws Exception {
         final var scopeStr = mapper.writeValueAsString(scope);
         final var endpoint = "/security/1.0/lookup/principals/" + principal + "/roleNames";
         final var request = buildPostRequest(endpoint, scopeStr);
         final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() == 200) {
-            return mapper.readValue(response.body(), List.class);
+            return mapper.readValue(response.body(), Set.class);
         }
         throw new Exception(); //TODO: proper error handling
     }
 
 
-
     /**
-     *  Look up the resource bindings for the principal at the given scope/cluster.
-     *
+     * Look up the resource bindings for the principal at the given scope/cluster.
+     * <p>
      * Wraps POST /security/1.0/lookup/principal/{principal}/resources
      *
      * @param principal
@@ -261,8 +259,9 @@ public class MdsClient {
 
 
     /**
-     *  Look up the KafkaPrincipals who have the given role for the given scope.
-     *  Wraps: POST /security/1.0/lookup/role/{roleName}
+     * Look up the KafkaPrincipals who have the given role for the given scope.
+     * Wraps: POST /security/1.0/lookup/role/{roleName}
+     *
      * @param roleName
      * @param scope
      * @return
@@ -277,7 +276,6 @@ public class MdsClient {
     }
 
     /**
-     *
      * @param endpoint
      * @param payload
      * @param <T>
@@ -292,8 +290,9 @@ public class MdsClient {
 
     /**
      * Look up the KafkaPrincipals who have the given role on the specified resource for the given scope.
-     *
+     * <p>
      * Wraps POST /security/1.0/lookup/role/{roleName}/resource/{resourceType}/name/{resourceName}
+     *
      * @param roleName
      * @param resourceType
      * @param resourceName
@@ -309,89 +308,14 @@ public class MdsClient {
         throw exceptionFromResponse(response);
     }
 
-
+    //TODO
     // Kafka ACL management
 
-
+    //TODO
     // Cluster Registry
 
-
+    //TODO
     // Audit Log configuration
 
-
-
-
-    public static void main(String[] args) throws Exception {
-
-        final var client = new MdsClient("alice", "alice-secret", "http://localhost:8090");
-
-        System.out.println(client.metadataClusterId());
-        final Map<String, ?> features = client.features();
-
-        System.out.println(client.roles());
-        System.out.println(client.roles("ClusterAdmin"));
-        System.out.println(client.roleNames());
-
-        final Scope kafkaScope = Scope.forClusterId("GKdJd8MhSYKzmosSO2xaKA");
-
-//        client.unbindClusterRole("User:charlie", "ClusterAdmin", Scope.forClusterId("GKdJd8MhSYKzmosSO2xaKA"));
-//
-//
-//        client.addBinding("User:charlie", "ResourceOwner", kafkaScope,
-//                List.of(new ResourcePattern("Topic", "test-2", "PREFIXED")));
-//
-//        client.lookup("User:charlie", kafkaScope);
-//        client.removeBinding("User:charlie", "ResourceOwner", kafkaScope,
-//                List.of(new ResourcePattern("Topic", "test-2", "PREFIXED")));
-//        client.lookup("User:charlie", kafkaScope);
-//
-//        System.out.println(client.roleNamesForPrincipal("User:alice", kafkaScope));
-//        System.out.println(client.bindingsForPrincipal("User:barnie", kafkaScope));
-
-        System.out.println(client.principalsForRole("ResourceOwner", kafkaScope));
-        System.out.println(client.principalsForResource("ResourceOwner", "Group", "schema-registry",kafkaScope));
-
-//        System.out.println(client.lookupRolebindings("User:barnie", "ResourceOwner", kafkaScope));
-
-        //strategy to extract all RBAC role bindings:
-        // 1. list all rolenames
-        // 2. for a fixed scope (just one Kafka cluster in the MVP), get all principals who have the given role
-        // 3. for each principal, get all rolebindings
-
-        final var roleNames = client.roleNames();
-        System.out.println(roleNames);
-        final var allPrincipals = roleNames.stream().flatMap(roleName -> {
-            try { //TODO: fix this mess!
-                return client.principalsForRole(roleName, kafkaScope).stream();
-            } catch (Exception e) {
-                e.printStackTrace();
-                return Stream.empty();
-            }
-        }).collect(Collectors.toSet());
-        System.out.println(allPrincipals);
-
-        Set<RbacBinding> rbacBindings = new HashSet<>();
-        allPrincipals.forEach(principal -> {
-            try {
-                final var bfp = client.bindingsForPrincipal(principal, kafkaScope);
-                System.out.println("    " + bfp);
-                bfp.forEach((bindingPrincipal, rbs) -> {
-                  rbs.forEach((roleName, patters) -> {
-                      if (patters.isEmpty()) {
-                          rbacBindings.add(new RbacBinding(bindingPrincipal, roleName, ResourcePattern.CLUSTERPATTERN));
-                      }
-                      for (ResourcePattern pattern : patters) {
-                          rbacBindings.add(new RbacBinding(bindingPrincipal, roleName, pattern));
-                      }
-                  });
-                });
-            } catch (Exception e) {
-
-            }});
-
-        System.out.println("all bindings");
-        rbacBindings.forEach(System.out::println);
-
-    }
 
 }
