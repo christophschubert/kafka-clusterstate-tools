@@ -15,8 +15,13 @@ import static org.junit.Assert.*;
  */
 public class MdsClientIT {
 
-    public static void printFeatureSummary(Map<String, ?> features) {
-        //TODO
+    public static void printFeatureSummary(FeaturesDescription features) {
+        System.out.println("Enabled MDS features:");
+        features.features.forEach((name, valid) -> {
+            if (valid) {
+                System.out.println(" - " + features.legend.get(name));
+            }
+        });
     }
 
     public static void main(String[] args) throws Exception {
@@ -26,8 +31,8 @@ public class MdsClientIT {
         // only 1 cluster => metadata cluster = Kafka cluster!
         final String kafkaClusterId = client.metadataClusterId();
         System.out.println("Cluster Id: " + kafkaClusterId);
-        final Map<String, ?> features = client.features();
-        System.out.println("Features:" + features);
+        final FeaturesDescription features = client.features();
+        printFeatureSummary(features);
 
         System.out.println(client.roles());
         System.out.println(client.roles("ClusterAdmin"));

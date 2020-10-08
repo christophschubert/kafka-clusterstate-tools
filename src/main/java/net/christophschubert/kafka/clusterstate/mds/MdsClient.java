@@ -73,24 +73,39 @@ public class MdsClient {
         return mapper.readValue(get(endpoint).body(), clazz);
     }
 
+    <T> T getAndParseAs(String endpoint, TypeReference<T> typeReference) throws IOException, InterruptedException {
+        return mapper.readValue(get(endpoint).body(), typeReference);
+    }
+
+
+    MdsRestException exceptionFromResponse(HttpResponse<String> response) {
+        return new MdsRestException(
+                response.statusCode(),
+                response.uri().toString(),
+                response.body()
+        );
+    }
+
+
+
     // cluster metadata
 
     public String metadataClusterId() throws IOException, InterruptedException {
         return get("metadataClusterId").body();
     }
 
-    //TODO: parse to proper class
-    public Map<String, ?> features() throws IOException, InterruptedException {
-        return getAndParseAs("features", Map.class);
+    public FeaturesDescription features() throws IOException, InterruptedException {
+        return getAndParseAs("features", FeaturesDescription.class);
     }
 
-    //TODO: parse to proper class
-    public List<Map<String, ?>> roles() throws IOException, InterruptedException {
-        return getAndParseAs("roles", List.class);
+    public List<RoleDefinition> roles() throws IOException, InterruptedException {
+        return getAndParseAs("roles", new TypeReference<List<RoleDefinition>>() {
+        });
     }
 
-    public Map<String, ?> roles(String rolename) throws IOException, InterruptedException {
-        return getAndParseAs("roles/" + rolename, Map.class);
+
+    public RoleDefinition roles(String rolename) throws IOException, InterruptedException {
+        return getAndParseAs("roles/" + rolename, RoleDefinition.class);
     }
 
     public List<String> roleNames() throws IOException, InterruptedException {
@@ -221,14 +236,6 @@ public class MdsClient {
         }
     }
 
-
-    MdsRestException exceptionFromResponse(HttpResponse<String> response) {
-        return new MdsRestException(
-                response.statusCode(),
-                response.uri().toString(),
-                response.body()
-        );
-    }
 
 
     /**
