@@ -64,6 +64,12 @@ public class MdsClient {
         return client.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
+    <T> HttpResponse<String> delete(String endpoint, T payload) throws IOException, InterruptedException {
+        final var body = mapper.writeValueAsString(payload);
+        final var request = buildRequest(endpoint, "DELETE", body);
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
     HttpResponse<String> get(String endpoint) throws IOException, InterruptedException {
         final var request = buildRequest(secV1 + endpoint);
         return client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -206,7 +212,7 @@ public class MdsClient {
      */
     public void removeBinding(String principal, String roleName, Scope scope, List<ResourcePattern> resources) throws Exception {
         final var endpoint = "/security/1.0/principals/" + principal + "/roles/" + roleName + "/bindings";
-        final var response = post(endpoint, new ResourceResponse(scope, resources));
+        final var response = delete(endpoint, new ResourceResponse(scope, resources));
 
         if (response.statusCode() != 204) {
             throw exceptionFromResponse(response);

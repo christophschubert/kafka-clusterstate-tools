@@ -1,6 +1,9 @@
 package net.christophschubert.kafka.clusterstate;
 
 
+import net.christophschubert.kafka.clusterstate.mds.RbacBinding;
+import net.christophschubert.kafka.clusterstate.mds.RbacBindingInScope;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -8,6 +11,10 @@ import java.util.Set;
 public class ClusterStateDiff {
     final Set<ACLEntry> addedAclEntries;
     final Set<ACLEntry> deletedAclEntries;
+
+    final Set<RbacBindingInScope> addedRbacBindings;
+    final Set<RbacBindingInScope> deletedRbacBindings;
+
     final Map<String, TopicDescription> addedTopics;
     final Set<String> deletedTopicNames;
     final Map<String, Update<TopicDescription>> updatedTopicConfigs;
@@ -20,6 +27,10 @@ public class ClusterStateDiff {
     public ClusterStateDiff(ClusterState before, ClusterState after) {
         this.addedAclEntries = Sets.setMinus(after.aclsEntries, before.aclsEntries);
         this.deletedAclEntries = Sets.setMinus(before.aclsEntries, after.aclsEntries);
+
+        this.addedRbacBindings = Sets.setMinus(after.roleBindings, before.roleBindings);
+        this.deletedRbacBindings = Sets.setMinus(before.roleBindings, after.roleBindings);
+
         //TODO: think about whether we have to prevent ACLs for internal topics (topics
         // created by streams app) to be removed
         // maybe this is no the case as we work with prefixed ACLs anyhow?

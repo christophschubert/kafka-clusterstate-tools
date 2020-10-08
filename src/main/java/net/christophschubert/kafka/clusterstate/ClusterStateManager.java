@@ -1,6 +1,9 @@
 package net.christophschubert.kafka.clusterstate;
 
 import net.christophschubert.kafka.clusterstate.actions.*;
+import net.christophschubert.kafka.clusterstate.mds.MdsTools;
+import net.christophschubert.kafka.clusterstate.mds.RbacBindingInScope;
+import net.christophschubert.kafka.clusterstate.mds.Scope;
 import net.christophschubert.kafka.clusterstate.policies.IncrementalUpdateNoCheck;
 import net.christophschubert.kafka.clusterstate.policies.TopicConfigUpdatePolicy;
 import org.apache.kafka.clients.admin.ConfigEntry;
@@ -11,6 +14,7 @@ import org.apache.kafka.common.errors.SecurityDisabledException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -44,10 +48,24 @@ public class ClusterStateManager {
                 throw e;
             }
         }
-        // TODO: extract RoleBindings
+
+        Set<RbacBindingInScope> rbacBindings = Collections.emptySet();
+        if (bundle.mdsClient != null) {
+            //TODO: find a better way to figure out whether we should extract
+            try {
+                final var clusterId = bundle.mdsClient.metadataClusterId(); // TODO: check which clusterId we should use
+                final Scope scope = Scope.forClusterId(clusterId);
+                rbacBindings = MdsTools.extractAllRolebindings(bundle.mdsClient, scope);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+        }
+
         return new ClusterState(
                 aclEntries,
-                Collections.emptySet(),
+                rbacBindings,
                 topicDescriptions,
                 Collections.emptySet() //we currently no not track managed prefixes
         );
@@ -72,7 +90,9 @@ public class ClusterStateManager {
                 .flatMap(u -> topicConfigUpdatePolicy.calcChanges(u.after.name(), u.map(TopicDescription::configs)).stream())
                 .forEach(actions::add);
 
-        //TODO: add changes for role-bindings
+        diff.deletedRbacBindings.forEach(rbacBinding -> actions.add(new DeleteRbacBindingAction(rbacBinding)));
+        diff.addedRbacBindings.forEach(rbacBinding -> actions.add(new CreateRbacBindingAction(rbacBinding)));
+
 
         //TODO: questions to consider:
         // how to register schemas for internal streams topics?

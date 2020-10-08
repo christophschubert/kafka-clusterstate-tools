@@ -2,6 +2,8 @@ package net.christophschubert.kafka.clusterstate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import net.christophschubert.kafka.clusterstate.mds.RbacBinding;
+import net.christophschubert.kafka.clusterstate.mds.RbacBindingInScope;
 
 import java.util.*;
 
@@ -9,7 +11,7 @@ public class ClusterState {
     @JsonProperty("aclsEntries")
     Set<ACLEntry> aclsEntries;
     @JsonProperty("roleBindings")
-    Set<RbacRoleBinding> roleBindings;
+    Set<RbacBindingInScope> roleBindings;
     @JsonProperty("topicDescriptions")
     Map<String, TopicDescription> topicDescriptions;
 
@@ -19,7 +21,7 @@ public class ClusterState {
     @JsonCreator
     public ClusterState(
             @JsonProperty("aclsEntries") Set<ACLEntry> aclsEntries,
-            @JsonProperty("roleBindings") Set<RbacRoleBinding> roleBindings,
+            @JsonProperty("roleBindings") Set<RbacBindingInScope> roleBindings,
             @JsonProperty("topicDescriptions") Map<String, TopicDescription> topicDescriptions,
             @JsonProperty("managedTopicPrefixes") Set<String> managedTopicPrefixes
     ) {

@@ -29,6 +29,11 @@ public class ResourcePattern {
         this.patternType = patternType;
     }
 
+    //TODO: find a better way to encode system wide patterns
+    public boolean isSystemPattern() {
+        return resourceType.equals("") && name.equals("") && patternType.equals("");
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

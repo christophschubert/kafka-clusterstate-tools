@@ -4,9 +4,9 @@ import java.util.Objects;
 
 // to check: this only makes sense relative to a given scope (?), should scope be included in class?
 public class RbacBinding {
-    final String principal;
-    final String roleName;
-    final ResourcePattern resourcePattern;
+    public final String principal;
+    public final String roleName;
+    public final ResourcePattern resourcePattern;
 
     public RbacBinding(String principal, String roleName, ResourcePattern resourcePattern) {
         this.principal = principal;

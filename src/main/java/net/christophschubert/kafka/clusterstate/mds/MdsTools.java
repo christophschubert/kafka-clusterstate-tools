@@ -12,43 +12,42 @@ public class MdsTools {
      * Extract all RBAC rolebindings for a Kafka cluster.
      *
      * @param client
-     * @param kafkaClusterId
+     * @param scope
      * @return
      * @throws IOException
      * @throws InterruptedException
      */
-    public Set<RbacBinding> extractAllRolebindings(MdsClient client, String kafkaClusterId) throws IOException, InterruptedException {
+    public static Set<RbacBindingInScope> extractAllRolebindings(MdsClient client, Scope scope) throws IOException, InterruptedException {
         //strategy to extract all RBAC role bindings:
         // 1. list all rolenames
         // 2. for a fixed scope (just one Kafka cluster in the MVP), get all principals who have the given role
         // 3. for each principal, get all rolebindings
 
-        final Scope kafkaScope = Scope.forClusterId(kafkaClusterId);
+
 
         final var roleNames = client.roleNames();
-        System.out.println(roleNames);
+
         final var allPrincipals = roleNames.stream().flatMap(roleName -> {
             try { //TODO: fix this mess!
-                return client.principalsForRole(roleName, kafkaScope).stream();
+                return client.principalsForRole(roleName, scope).stream();
             } catch (Exception e) {
                 e.printStackTrace();
                 return Stream.empty();
             }
         }).collect(Collectors.toSet());
-        System.out.println(allPrincipals);
 
-        final Set<RbacBinding> rbacBindings = new HashSet<>();
+        final Set<RbacBindingInScope> rbacBindings = new HashSet<>();
         allPrincipals.forEach(principal -> {
             try {
-                final var bfp = client.bindingsForPrincipal(principal, kafkaScope);
-                System.out.println("    " + bfp);
+                final var bfp = client.bindingsForPrincipal(principal, scope);
                 bfp.forEach((bindingPrincipal, rbs) -> {
                     rbs.forEach((roleName, patters) -> {
                         if (patters.isEmpty()) {
-                            rbacBindings.add(new RbacBinding(bindingPrincipal, roleName, ResourcePattern.CLUSTERPATTERN));
+                            rbacBindings.add(new RbacBindingInScope(
+                                    new RbacBinding(bindingPrincipal, roleName, ResourcePattern.CLUSTERPATTERN), scope));
                         }
                         for (ResourcePattern pattern : patters) {
-                            rbacBindings.add(new RbacBinding(bindingPrincipal, roleName, pattern));
+                            rbacBindings.add(new RbacBindingInScope(new RbacBinding(bindingPrincipal, roleName, pattern), scope));
                         }
                     });
                 });

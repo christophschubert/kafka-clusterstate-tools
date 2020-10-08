@@ -6,6 +6,7 @@ import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import io.confluent.kafka.schemaregistry.json.JsonSchemaProvider;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchemaProvider;
+import net.christophschubert.kafka.clusterstate.mds.MdsClient;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 
@@ -19,15 +20,21 @@ import java.util.Properties;
  */
 public class ClientBundle {
 
+    public final static String MDS_SERVER_URL_CONFIG = "mds.server.url";
+    public final static String MDS_SERVER_USERNAME_CONFIG = "mds.server.login";
+    public final static String MDS_SERVER_PASSWORD_CONFIG = "mds.server.password";
+
     public final Admin adminClient;
     public final SchemaRegistryClient schemaRegistryClient;
+    public final MdsClient mdsClient;
     public final File context;
 
 
-    public ClientBundle(Admin adminClient, SchemaRegistryClient schemaRegistryClient, File context) {
+    public ClientBundle(Admin adminClient, MdsClient mdsClient, SchemaRegistryClient schemaRegistryClient, File context) {
         this.adminClient = adminClient;
-        this.context = context;
+        this.mdsClient = mdsClient;
         this.schemaRegistryClient = schemaRegistryClient;
+        this.context = context;
     }
 
 
@@ -43,7 +50,16 @@ public class ClientBundle {
                     (Map)properties, null);
         }
 
-        return new ClientBundle(KafkaAdminClient.create(properties), srClient, context);
+        MdsClient mdsClient = null;
+        if (properties.containsKey(MDS_SERVER_URL_CONFIG)) {
+            mdsClient = new MdsClient(
+                    properties.get(MDS_SERVER_USERNAME_CONFIG).toString(),
+                    properties.get(MDS_SERVER_PASSWORD_CONFIG).toString(),
+                    properties.get(MDS_SERVER_URL_CONFIG).toString()
+            );
+        }
+
+        return new ClientBundle(KafkaAdminClient.create(properties), mdsClient, srClient, context);
     }
 
 }

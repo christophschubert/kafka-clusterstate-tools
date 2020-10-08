@@ -1,5 +1,8 @@
 package net.christophschubert.kafka.clusterstate.mds;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -49,10 +52,19 @@ public class MdsClientIT {
         assertEquals(Set.of("SystemAdmin"), client.roleNamesForPrincipal("User:charlie", kafkaScope));
 
 
-        client.addBinding("User:fred", "ResourceOwner", kafkaScope,
+//        client.addBinding("User:fred", "ResourceOwner", kafkaScope,
+//                List.of(new ResourcePattern("Topic", "test-2", "PREFIXED")));
+        client.removeBinding("User:fred", "ResourceOwner", kafkaScope,
                 List.of(new ResourcePattern("Topic", "test-2", "PREFIXED")));
 
-        System.out.println(client.bindingsForPrincipal("User:charlie", kafkaScope));
+
+
+        System.out.println(client.bindingsForPrincipal("User:fred", kafkaScope));
+
+//        final var roles = client.roles();
+//
+//        final var objectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
+//        System.out.println(objectWriter.writeValueAsString(roles));
     }
 
 }
