@@ -331,8 +331,53 @@ public class MdsClient {
     //TODO
     // Kafka ACL management
 
-    //TODO
-    // Cluster Registry
+
+    /**
+     * Returns a list of all clusters in the registry.
+     *
+     * Wraps GET /security/1.0/registry/clusters
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public Set<ClusterDescription> getClusters() throws IOException, InterruptedException {
+        return getAndParseAs("registry/clusters", new TypeReference<Set<ClusterDescription>>(){});
+    }
+
+
+
+    /**
+     *
+     *
+     * Wraps GET /security/1.0/registry/clusters/{clusterName}
+     *
+     * @param clusterName name of cluster (ASCII printable characters without spaces)
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public ClusterDescription getCluster(String clusterName) throws IOException, InterruptedException {
+        return getAndParseAs("registry/clusters/" + clusterName, ClusterDescription.class);
+    }
+
+    /**
+     * Define/overwrite named clusters.
+     *
+     * Wraps POST /security/1.0/registry/clusters
+     *
+     * @param clusterDescriptions
+     */
+    public void writeClusters(Set<ClusterDescription> clusterDescriptions) throws IOException, InterruptedException, MdsRestException {
+        final var response = post("registry/clusters", clusterDescriptions);
+        if (response.statusCode() != 204) {
+            throw exceptionFromResponse(response);
+        }
+    }
+
+    // wraps DELETE /security/1.0/registry/clusters/{clusterName}
+    public void deleteCluster(String clusterName) throws IOException, InterruptedException {
+        delete("registry/clusters/" + clusterName, "");
+    }
 
     //TODO
     // Audit Log configuration

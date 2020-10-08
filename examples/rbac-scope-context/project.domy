@@ -1,0 +1,20 @@
+---
+name: test
+projects:
+- name: configTestProject
+  topics:
+    - name: topicA
+      configs:
+        "num.partitions": "12"
+        "cleanup.policy": "compact"
+        "segment.ms": "12000"
+    - name: topicB
+      dataModel:
+        key:
+          type: String
+        value:
+          type: Integer
+  consumers:
+    - principal: "User:xxx"
+      groupId: "groupForApp"
+      prefixGroup: true

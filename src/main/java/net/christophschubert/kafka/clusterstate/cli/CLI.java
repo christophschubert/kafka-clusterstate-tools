@@ -79,6 +79,8 @@ class CLI {
         });
 
         final ClientBundle bundle = ClientBundle.fromProperties(properties, contextPath);
+        System.out.println("Scopes" + bundle.mdsScopes);
+
         final ClusterState currentState = ClusterStateManager.build(bundle);
 
         clusterStateByDomain.forEach((domainName, desiredState) -> {
@@ -118,6 +120,7 @@ class CLI {
 
         final ClientBundle bundle = ClientBundle.fromProperties(properties, new File("."));
         final ClusterState clusterState = ClusterStateManager.build(bundle);
+
 
         final ObjectMapper mapper = new ObjectMapper();
         mapper.writer().writeValue(stateFile, clusterState);

@@ -28,6 +28,22 @@ public class Scope {
         );
     }
 
+    public static Scope forConnectCluster(String kafkaClusterId, String connectClusterId) {
+        return new Scope (null, new Clusters(kafkaClusterId, connectClusterId, null, null));
+    }
+
+    public static Scope forKsqldbCluster(String kafkaClusterId, String ksqlDBClusterId) {
+        return new Scope (null, new Clusters(kafkaClusterId, null, ksqlDBClusterId, null));
+    }
+
+    public static Scope forSchemaRegistryCluster(String kafkaClusterId, String schemaRegistryClusterId) {
+        return new Scope (null, new Clusters(kafkaClusterId, null, null, schemaRegistryClusterId));
+    }
+
+    public static Scope forClusterName(String clusterName) {
+        return new Scope (clusterName, null);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

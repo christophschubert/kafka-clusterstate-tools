@@ -49,14 +49,28 @@ public class ClusterStateManager {
             }
         }
 
-        Set<RbacBindingInScope> rbacBindings = Collections.emptySet();
+        Set<RbacBindingInScope> rbacBindings = new HashSet<>();
         if (bundle.mdsClient != null) {
             //TODO: find a better way to figure out whether we should extract
             try {
-                final var clusterId = bundle.mdsClient.metadataClusterId(); // TODO: check which clusterId we should use
-                final Scope scope = Scope.forClusterId(clusterId);
-                rbacBindings = MdsTools.extractAllRolebindings(bundle.mdsClient, scope);
-            } catch (IOException e) {
+                Set<Scope> scopes = bundle.mdsScopes;
+                if (scopes.isEmpty()) {
+                    final var clusterId = bundle.mdsClient.metadataClusterId(); // TODO: check which clusterId we should use
+                    scopes = Set.of(Scope.forClusterId(clusterId));
+                }
+                scopes.forEach(scope ->
+                        {
+                            try {
+                                final var rbacBindingInScope = MdsTools.extractAllRolebindings(bundle.mdsClient, scope);
+                                rbacBindings.addAll(rbacBindingInScope);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                );
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 

@@ -1,0 +1,25 @@
+[
+  {
+    "clusters": {
+      "kafka-cluster": "2SzkuwW5S6mwXYFAuXj3zw"
+    }
+  },
+  {
+    "clusters": {
+      "kafka-cluster": "2SzkuwW5S6mwXYFAuXj3zw",
+      "schema-registry-cluster": "schema-registry"
+    }
+  },
+  {
+    "clusters": {
+      "kafka-cluster": "2SzkuwW5S6mwXYFAuXj3zw",
+      "connect-cluster": "connect-cluster"
+    }
+  },
+  {
+    "clusters": {
+      "kafka-cluster": "2SzkuwW5S6mwXYFAuXj3zw",
+      "ksql-cluster": "default_"
+    }
+  }
+]
