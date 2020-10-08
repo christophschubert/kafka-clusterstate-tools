@@ -15,11 +15,13 @@ import java.util.Set;
 
 public class MdsClient {
 
+    private final static String secV1 = "/security/1.0/";
+
     private final String username;
     private final String password;
     private final String baseUrl;
 
-    HttpClient client = HttpClient.newBuilder().build();
+    final HttpClient client = HttpClient.newBuilder().build();
 
     final ObjectMapper mapper = new ObjectMapper();
 
@@ -29,44 +31,14 @@ public class MdsClient {
         this.baseUrl = baseUrl;
     }
 
+    // helper functions to deal with requests
+
     private HttpRequest buildRequest(String endpoint) {
         return HttpRequest.newBuilder(URI.create(baseUrl + endpoint))
                 .header("Authorization", "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes()))
                 .build();
 
     }
-
-    public String metadataClusterId() throws IOException, InterruptedException {
-        final var request = buildRequest("/security/1.0/metadataClusterId");
-        final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        return response.body();
-    }
-
-    //TODO: parse to proper class
-    public Map<String, ?> features() throws IOException, InterruptedException {
-        final var request = buildRequest("/security/1.0/features");
-        final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        return mapper.readValue(response.body(), Map.class);
-    }
-
-    public List<Map<String, ?>> roles() throws IOException, InterruptedException {
-        final var request = buildRequest("/security/1.0/roles");
-        final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        return mapper.readValue(response.body(), List.class);
-    }
-
-    public Map<String, ?> roles(String rolename) throws IOException, InterruptedException {
-        final var request = buildRequest("/security/1.0/roles/" + rolename);
-        final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        return mapper.readValue(response.body(), Map.class);
-    }
-
-    public List<String> roleNames() throws IOException, InterruptedException {
-        final var request = buildRequest("/security/1.0/roleNames");
-        final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        return mapper.readValue(response.body(), List.class);
-    }
-
 
     private HttpRequest buildPostRequest(String endpoint, String body) {
         return buildRequest(endpoint, "POST", body);
@@ -79,6 +51,52 @@ public class MdsClient {
                 .header("Authorization", "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes()))
                 .build();
     }
+
+    /**
+     * @param endpoint
+     * @param payload
+     * @param <T>
+     * @return
+     */
+    <T> HttpResponse<String> post(String endpoint, T payload) throws IOException, InterruptedException {
+        final var body = mapper.writeValueAsString(payload);
+        final var request = buildPostRequest(endpoint, body);
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    HttpResponse<String> get(String endpoint) throws IOException, InterruptedException {
+        final var request = buildRequest(secV1 + endpoint);
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    <T> T getAndParseAs(String endpoint, Class<T> clazz) throws IOException, InterruptedException {
+        return mapper.readValue(get(endpoint).body(), clazz);
+    }
+
+    // cluster metadata
+
+    public String metadataClusterId() throws IOException, InterruptedException {
+        return get("metadataClusterId").body();
+    }
+
+    //TODO: parse to proper class
+    public Map<String, ?> features() throws IOException, InterruptedException {
+        return getAndParseAs("features", Map.class);
+    }
+
+    //TODO: parse to proper class
+    public List<Map<String, ?>> roles() throws IOException, InterruptedException {
+        return getAndParseAs("roles", List.class);
+    }
+
+    public Map<String, ?> roles(String rolename) throws IOException, InterruptedException {
+        return getAndParseAs("roles/" + rolename, Map.class);
+    }
+
+    public List<String> roleNames() throws IOException, InterruptedException {
+        return getAndParseAs("roleNames", List.class);
+    }
+
 
 
     /**
@@ -231,7 +249,7 @@ public class MdsClient {
         if (response.statusCode() == 200) {
             return mapper.readValue(response.body(), Set.class);
         }
-        throw new Exception(); //TODO: proper error handling
+        throw exceptionFromResponse(response);
     }
 
 
@@ -275,17 +293,6 @@ public class MdsClient {
         throw exceptionFromResponse(response);
     }
 
-    /**
-     * @param endpoint
-     * @param payload
-     * @param <T>
-     * @return
-     */
-    <T> HttpResponse<String> post(String endpoint, T payload) throws IOException, InterruptedException {
-        final var body = mapper.writeValueAsString(payload);
-        final var request = buildPostRequest(endpoint, body);
-        return client.send(request, HttpResponse.BodyHandlers.ofString());
-    }
 
 
     /**
