@@ -59,9 +59,13 @@ class CLI {
                     try {
                         return Stream.of(parser.loadFromFile(path.toFile()));
                     } catch (IOException e) {
-                        logger.error("Could not open domain file " + path , e);
+                        logger.error("Could not open or parse domain file " + path , e);
+                        // we should quit application here since otherwise the topic specified in the unparseable domain
+                        // file will be deleted!
+                        logger.error("Stopping processing to prevent possible data loss");
+                        System.exit(1);
                     }
-                    return Stream.empty();
+                    return Stream.empty(); // to keep compiler happy
                 }).collect(Collectors.toList());
 
         logger.info("Domains: " + domains);
