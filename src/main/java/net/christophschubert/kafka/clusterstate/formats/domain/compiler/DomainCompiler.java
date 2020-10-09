@@ -5,6 +5,7 @@ import net.christophschubert.kafka.clusterstate.formats.domain.DataModel;
 import net.christophschubert.kafka.clusterstate.formats.domain.Domain;
 import net.christophschubert.kafka.clusterstate.formats.domain.Project;
 import net.christophschubert.kafka.clusterstate.formats.domain.ProjectSubResource;
+import net.christophschubert.kafka.clusterstate.mds.RbacBindingInScope;
 
 import java.util.Collections;
 import java.util.Map;
@@ -13,9 +14,22 @@ import java.util.stream.Collectors;
 
 public class DomainCompiler {
 
-    public DomainCompiler(ResourceNamingStrategy namingStrategy, AclStrategy aclStrategy) {
+    public DomainCompiler(
+            ResourceNamingStrategy namingStrategy,
+            ProjectAuthorizationStrategy<ACLEntry> aclStrategy,
+            ProjectAuthorizationStrategy<RbacBindingInScope> rbacStrategy
+    ) {
         this.namingStrategy = namingStrategy;
         this.aclStrategy = aclStrategy;
+        this.roleBindingStrategy = rbacStrategy;
+    }
+
+    public static DomainCompiler createAcls(ResourceNamingStrategy namingStrategy, ProjectAuthorizationStrategy<ACLEntry> aclStrategy) {
+        return new DomainCompiler(namingStrategy, aclStrategy, null);
+    }
+
+    public static DomainCompiler createRoleBindings(ResourceNamingStrategy namingStrategy, ProjectAuthorizationStrategy<RbacBindingInScope> rbacStrategy) {
+        return new DomainCompiler(namingStrategy, null, rbacStrategy);
     }
 
     /**
@@ -40,13 +54,16 @@ public class DomainCompiler {
     }
 
 
-    interface AclStrategy {
-        Set<ACLEntry> aclsForProject(Project project, ResourceNamingStrategy namingStrategy);
+    interface ProjectAuthorizationStrategy<A> {
+        Set<A> authForProject(Project project, ResourceNamingStrategy namingStrategy);
     }
 
-    private final ResourceNamingStrategy namingStrategy;
-    private final AclStrategy aclStrategy;
 
+    private final ResourceNamingStrategy namingStrategy;
+    private final ProjectAuthorizationStrategy<RbacBindingInScope> roleBindingStrategy;
+    private final ProjectAuthorizationStrategy<ACLEntry> aclStrategy;
+
+    //TODO: refactor and document properly
     TopicDataModel convertDataModel(DataModel dm) {
 
         if (dm == null) {
@@ -71,7 +88,6 @@ public class DomainCompiler {
      * @return A ClusterState representing the Domain.
      */
     public ClusterState compile(Domain domain) {
-
         final Map<String, TopicDescription> topics = domain.projects.stream()
                 .flatMap(project -> project.topics.stream())
                 .collect(Collectors.toMap(
@@ -80,10 +96,18 @@ public class DomainCompiler {
                                     convertDataModel(topic.dataModel))
                 ));
 
-        final var acls = domain.projects.stream()
-                .flatMap(project -> aclStrategy.aclsForProject(project, namingStrategy).stream())
-                .collect(Collectors.toSet());
-
+        Set<ACLEntry> acls = Collections.emptySet();
+        Set<RbacBindingInScope> bindings = Collections.emptySet();
+        //TODO: extract logic to method
+        if (roleBindingStrategy != null) {
+            bindings = domain.projects.stream()
+                    .flatMap(project -> roleBindingStrategy.authForProject(project, namingStrategy).stream())
+                    .collect(Collectors.toSet());
+        } else {
+            acls = domain.projects.stream()
+                    .flatMap(project -> aclStrategy.authForProject(project, namingStrategy).stream())
+                    .collect(Collectors.toSet());
+        }
         // get all fully qualified application IDs
         final String streamsInternalTopicSeparator = "-";
 
@@ -98,7 +122,6 @@ public class DomainCompiler {
                 .map(s -> s + streamsInternalTopicSeparator)
                 .collect(Collectors.toSet());
 
-        //TODO: add code to generate RBAC role bindings
-        return new ClusterState(acls, Collections.emptySet(), topics, streamsInternalTopicPrefixes);
+        return new ClusterState(acls, bindings, topics, streamsInternalTopicPrefixes);
     }
 }

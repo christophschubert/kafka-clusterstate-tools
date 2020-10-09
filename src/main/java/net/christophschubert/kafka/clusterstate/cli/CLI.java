@@ -64,7 +64,7 @@ class CLI {
         System.out.println(domains);
 
 
-        final DomainCompiler compiler = new DomainCompiler(DefaultStrategies.namingStrategy, DefaultStrategies.aclStrategy);
+        final DomainCompiler compiler = DomainCompiler.createAcls(DefaultStrategies.namingStrategy, DefaultStrategies.aclStrategy);
 
         final var groupedDomains = MapTools.groupBy(domains, Domain::name);
         final Map<String, ClusterState> clusterStateByDomain =

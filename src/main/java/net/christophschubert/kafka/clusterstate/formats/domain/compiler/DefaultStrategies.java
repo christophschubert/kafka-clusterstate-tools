@@ -29,7 +29,7 @@ public class DefaultStrategies {
      *
      * Could be used as a starting point for different ACL assignment.
      */
-    public static final ExtensibleAclStrategy aclStrategy = new ExtensibleAclStrategy(
+    public static final ExtensibleProjectAuthorizationStrategy<ACLEntry> aclStrategy = new ExtensibleProjectAuthorizationStrategy<>(
             new ConsumerAclStrategy(),
             new DefaultProducerAclStrategy(),
             new DefaultStreamsAppAclStrategy()
@@ -38,18 +38,19 @@ public class DefaultStrategies {
     /**
      * Placeholder implementation which return an empty ACL set.
      *
-     * @param <R> type of the Resource
+     * @param <A> type of the access control entry assigned
+     * @param <R> type of the resource
      */
-    static class EmptyAclStrategy<R extends ProjectSubResource> implements ExtensibleAclStrategy.ResourceAclStrategy<R> {
+    static class EmptyAclStrategy<A, R extends ProjectSubResource> implements ExtensibleProjectAuthorizationStrategy.ResourceAclStrategy<A, R> {
 
         @Override
-        public Set<ACLEntry> acls(R resource, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        public Set<A> acls(R resource, DomainCompiler.ResourceNamingStrategy namingStrategy) {
             return Collections.emptySet();
         }
     }
 
     //TODO: add descriptions of produced ACLs
-    static class ConsumerAclStrategy implements ExtensibleAclStrategy.ResourceAclStrategy<Consumer> {
+    static class ConsumerAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceAclStrategy<ACLEntry, Consumer> {
         @Override
         public Set<ACLEntry> acls(Consumer consumer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
             final Project project = consumer.parent;
@@ -60,7 +61,7 @@ public class DefaultStrategies {
     }
 
     //TODO: add descriptions of produced ACLs
-    static class DefaultProducerAclStrategy implements ExtensibleAclStrategy.ResourceAclStrategy<Producer> {
+    static class DefaultProducerAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceAclStrategy<ACLEntry, Producer> {
 
         @Override
         public Set<ACLEntry> acls(Producer producer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
@@ -74,7 +75,7 @@ public class DefaultStrategies {
     /**
      *
      */
-    static class DefaultStreamsAppAclStrategy implements ExtensibleAclStrategy.ResourceAclStrategy<StreamsApp> {
+    static class DefaultStreamsAppAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceAclStrategy<ACLEntry, StreamsApp> {
 
         @Override
         public Set<ACLEntry> acls(StreamsApp streamsApp, DomainCompiler.ResourceNamingStrategy namingStrategy) {

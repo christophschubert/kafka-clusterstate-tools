@@ -10,24 +10,25 @@ import java.util.Set;
  * Implements a visitor pattern with the configurable sub-strategies for
  * consumer, producer, and streaming apps.
  */
-public class ExtensibleAclStrategy implements DomainCompiler.AclStrategy {
+public class ExtensibleProjectAuthorizationStrategy<A> implements DomainCompiler.ProjectAuthorizationStrategy {
 
     /**
      * Functional interface to compute the ACLs for a sub-resource (e.g., consumer, producer).
+     * @param <A> type of access control generated.
      * @param <R> type of the resource.
      */
-    public interface ResourceAclStrategy<R extends ProjectSubResource> {
-        Set<ACLEntry> acls(R resource, DomainCompiler.ResourceNamingStrategy namingStrategy);
+    public interface ResourceAclStrategy<A, R extends ProjectSubResource> {
+        Set<A> acls(R resource, DomainCompiler.ResourceNamingStrategy namingStrategy);
     }
 
-    private final ResourceAclStrategy<Consumer> consumerSubAclStrategy;
-    private final ResourceAclStrategy<Producer> producerSubAclStrategy;
-    private final ResourceAclStrategy<StreamsApp> streamsAppSubAclStrategy;
+    private final ResourceAclStrategy<A, Consumer> consumerSubAclStrategy;
+    private final ResourceAclStrategy<A, Producer> producerSubAclStrategy;
+    private final ResourceAclStrategy<A, StreamsApp> streamsAppSubAclStrategy;
 
-    public ExtensibleAclStrategy(
-            ResourceAclStrategy<Consumer> consumerSubAclStrategy,
-            ResourceAclStrategy<Producer> producerSubAclStrategy,
-            ResourceAclStrategy<StreamsApp> streamsAppSubAclStrategy
+    public ExtensibleProjectAuthorizationStrategy(
+            ResourceAclStrategy<A, Consumer> consumerSubAclStrategy,
+            ResourceAclStrategy<A, Producer> producerSubAclStrategy,
+            ResourceAclStrategy<A, StreamsApp> streamsAppSubAclStrategy
     ) {
         this.consumerSubAclStrategy = consumerSubAclStrategy;
         this.producerSubAclStrategy = producerSubAclStrategy;
@@ -42,8 +43,8 @@ public class ExtensibleAclStrategy implements DomainCompiler.AclStrategy {
      * @return A set of ACLs which is the union of the ones specified by the sub-resource strategies.
      */
     @Override
-    public Set<ACLEntry> aclsForProject(Project project, DomainCompiler.ResourceNamingStrategy namingStrategy) {
-        Set<ACLEntry> entries = new HashSet<>();
+    public Set<A> authForProject(Project project, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        Set<A> entries = new HashSet<>();
         project.consumers.forEach(consumer -> entries.addAll(
                 consumerSubAclStrategy.acls(consumer,  namingStrategy)
         ));
