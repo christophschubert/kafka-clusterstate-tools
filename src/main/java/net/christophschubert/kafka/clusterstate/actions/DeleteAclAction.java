@@ -18,4 +18,11 @@ public class DeleteAclAction implements Action {
         bundle.adminClient.deleteAcls(Collections.singleton(entry.toAclBinding().toFilter()));
         return false;
     }
+
+    @Override
+    public String toString() {
+        return "DeleteAclAction{" +
+                "entry=" + entry +
+                '}';
+    }
 }

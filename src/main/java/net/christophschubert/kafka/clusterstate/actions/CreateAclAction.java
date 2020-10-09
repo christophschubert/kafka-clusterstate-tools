@@ -18,4 +18,11 @@ public class CreateAclAction implements Action {
         bundle.adminClient.createAcls(Collections.singleton(entry.toAclBinding()));
         return false;
     }
+
+    @Override
+    public String toString() {
+        return "CreateAclAction{" +
+                "entry=" + entry +
+                '}';
+    }
 }
