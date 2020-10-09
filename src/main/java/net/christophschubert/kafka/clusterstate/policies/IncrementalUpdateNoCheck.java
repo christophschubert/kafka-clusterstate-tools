@@ -21,19 +21,19 @@ public class IncrementalUpdateNoCheck implements TopicConfigUpdatePolicy {
      **/
 
     @Override
-    public List<Action> calcChanges(
-            String topicName, Update<Map<String, String>> configChange) {
-        Map<String, String> updatedConfigs = new HashMap<>();
+    public List<Action> calcChanges(String topicName, Update<Map<String, String>> configChange) {
+        final Map<String, String> updatedConfigs = new HashMap<>();
 
-        configChange.after.forEach(
-                (dKey, dValue) -> {
+        configChange.after.forEach((dKey, dValue) -> {
                     final var current = configChange.before;
-                    if (current.containsKey(dKey) && !current.get(dKey).equals(dValue)) {
+                    if (!current.containsKey(dKey) || !current.get(dKey).equals(dValue)) {
                         updatedConfigs.put(dKey, dValue);
                     }
                 });
-        final IncrementallyUpdateTopicAction action =
-                new IncrementallyUpdateTopicAction(topicName, updatedConfigs);
-        return Collections.singletonList(action);
+        if (updatedConfigs.isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return Collections.singletonList(new IncrementallyUpdateTopicAction(topicName, updatedConfigs));
+        }
     }
 }
