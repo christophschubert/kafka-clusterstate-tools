@@ -81,6 +81,15 @@ public class DomainCompiler {
         return new TopicDataModel(key, value);
     }
 
+    private <A> Set<A> collectProjects(Domain domain, ProjectAuthorizationStrategy<A> pas, ResourceNamingStrategy rns) {
+        if (pas == null) {
+            return Collections.emptySet();
+        }
+        return domain.projects.stream()
+                .flatMap(project -> pas.authForProject(project, rns).stream())
+                .collect(Collectors.toSet());
+    }
+
     /**
      * Convert a Domain description to a (desired) ClusterState.
      *
@@ -96,18 +105,9 @@ public class DomainCompiler {
                                     convertDataModel(topic.dataModel))
                 ));
 
-        Set<ACLEntry> acls = Collections.emptySet();
-        Set<RbacBindingInScope> bindings = Collections.emptySet();
-        //TODO: extract logic to method
-        if (roleBindingStrategy != null) {
-            bindings = domain.projects.stream()
-                    .flatMap(project -> roleBindingStrategy.authForProject(project, namingStrategy).stream())
-                    .collect(Collectors.toSet());
-        } else {
-            acls = domain.projects.stream()
-                    .flatMap(project -> aclStrategy.authForProject(project, namingStrategy).stream())
-                    .collect(Collectors.toSet());
-        }
+        final Set<ACLEntry> acls = collectProjects(domain, aclStrategy, namingStrategy);
+        final Set<RbacBindingInScope> bindings = collectProjects(domain, roleBindingStrategy, namingStrategy);
+
         // get all fully qualified application IDs
         final String streamsInternalTopicSeparator = "-";
 
