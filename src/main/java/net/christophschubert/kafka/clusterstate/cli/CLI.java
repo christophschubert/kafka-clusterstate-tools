@@ -7,6 +7,9 @@ import net.christophschubert.kafka.clusterstate.formats.domain.Domain;
 import net.christophschubert.kafka.clusterstate.formats.domain.DomainParser;
 import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DefaultStrategies;
 import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DomainCompiler;
+import net.christophschubert.kafka.clusterstate.formats.domain.compiler.RbacStrategies;
+import net.christophschubert.kafka.clusterstate.mds.ClusterRegistry;
+import net.christophschubert.kafka.clusterstate.mds.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -61,10 +64,24 @@ class CLI {
                     return Stream.empty();
                 }).collect(Collectors.toList());
 
-        System.out.println(domains);
+        logger.info("Domains: " + domains);
 
 
-        final DomainCompiler compiler = DomainCompiler.createAcls(DefaultStrategies.namingStrategy, DefaultStrategies.aclStrategy);
+        final ClientBundle bundle = ClientBundle.fromProperties(properties, contextPath);
+
+        DomainCompiler compiler;
+        if (bundle.mdsClient != null) {
+            //generate RBAC bindings
+            ClusterRegistry cr = new ClusterRegistry(bundle.mdsClient);
+            final var kafkaClusterName = cr.getKafkaNameForId(bundle.mdsClient.metadataClusterId()).get();
+            compiler = DomainCompiler.createRoleBindings(
+                    DefaultStrategies.namingStrategy, RbacStrategies.strategyForScope(
+                            //TODO: clarify whether this is the right scope!
+                            Scope.forClusterName(kafkaClusterName)));
+        } else {
+            compiler = DomainCompiler.createAcls(DefaultStrategies.namingStrategy, DefaultStrategies.aclStrategy);
+        }
+
 
         final var groupedDomains = MapTools.groupBy(domains, Domain::name);
         final Map<String, ClusterState> clusterStateByDomain =
@@ -78,8 +95,6 @@ class CLI {
             logger.info("\t" + domainName + ": " + desiredState + "\n");
         });
 
-        final ClientBundle bundle = ClientBundle.fromProperties(properties, contextPath);
-        System.out.println("Scopes" + bundle.mdsScopes);
 
         final ClusterState currentState = ClusterStateManager.build(bundle);
 

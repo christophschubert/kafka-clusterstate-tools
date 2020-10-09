@@ -18,3 +18,5 @@ projects:
     - principal: "User:xxx"
       groupId: "groupForApp"
       prefixGroup: true
+  producers:
+    - principal: "User:xxx"

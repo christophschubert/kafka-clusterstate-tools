@@ -31,6 +31,11 @@ public class ClusterStateDiff {
         this.addedRbacBindings = Sets.setMinus(after.roleBindings, before.roleBindings);
         this.deletedRbacBindings = Sets.setMinus(before.roleBindings, after.roleBindings);
 
+        System.out.println("before " + before.roleBindings);
+        System.out.println("after " + after.roleBindings);
+        System.out.println("added " + addedRbacBindings);
+        System.out.println("deleted " + deletedRbacBindings);
+
         //TODO: think about whether we have to prevent ACLs for internal topics (topics
         // created by streams app) to be removed
         // maybe this is no the case as we work with prefixed ACLs anyhow?

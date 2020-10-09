@@ -70,6 +70,12 @@ public class MdsClient {
         return client.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
+    <T> HttpResponse<String> put(String endpoint, T payload) throws IOException, InterruptedException {
+        final var body = mapper.writeValueAsString(payload);
+        final var request = buildRequest(endpoint, "PUT", body);
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
     HttpResponse<String> get(String endpoint) throws IOException, InterruptedException {
         final var request = buildRequest(secV1 + endpoint);
         return client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -92,7 +98,12 @@ public class MdsClient {
         );
     }
 
-
+    private static Scope splitScope(Scope scope) {
+        if (scope.clusterName != null) {
+            return Scope.forClusterName(scope.clusterName);// ensure that clusterName is the only non-null field in the scope if it is set.
+        }
+        return scope;
+    }
 
     // cluster metadata
 
@@ -127,10 +138,8 @@ public class MdsClient {
      * @param roleName
      */
     public void bindClusterRole(String principal, String roleName, Scope scope) throws Exception {
-        final var scopeStr = mapper.writeValueAsString(scope);
         final var endpoint = "/security/1.0/principals/" + principal + "/roles/" + roleName;
-        final var request = buildPostRequest(endpoint, scopeStr);
-        final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        final var response = post(endpoint, scope);
 
         if (response.statusCode() != 204) {
             throw exceptionFromResponse(response);
@@ -146,10 +155,8 @@ public class MdsClient {
      * @throws Exception
      */
     public void unbindClusterRole(String principal, String roleName, Scope scope) throws Exception {
-        final var scopeStr = mapper.writeValueAsString(scope);
         final var endpoint = "/security/1.0/principals/" + principal + "/roles/" + roleName;
-        final var request = buildRequest(endpoint, "DELETE", scopeStr);
-        final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        final var response = delete(endpoint, scope);
 
         if (response.statusCode() != 204) {
             throw exceptionFromResponse(response);
@@ -188,11 +195,9 @@ public class MdsClient {
      * @param resources
      */
     public void addBinding(String principal, String roleName, Scope scope, List<ResourcePattern> resources) throws Exception {
-        final var body = mapper.writeValueAsString(new ResourceResponse(scope, resources));
+        final var body = new ResourceResponse(scope, resources);
         final var endpoint = "/security/1.0/principals/" + principal + "/roles/" + roleName + "/bindings";
-        final var request = buildPostRequest(endpoint, body);
-        final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
+        final var response = post(endpoint, body);
         if (response.statusCode() != 204) {
             throw exceptionFromResponse(response);
         }
@@ -213,7 +218,6 @@ public class MdsClient {
     public void removeBinding(String principal, String roleName, Scope scope, List<ResourcePattern> resources) throws Exception {
         final var endpoint = "/security/1.0/principals/" + principal + "/roles/" + roleName + "/bindings";
         final var response = delete(endpoint, new ResourceResponse(scope, resources));
-
         if (response.statusCode() != 204) {
             throw exceptionFromResponse(response);
         }
@@ -232,10 +236,9 @@ public class MdsClient {
      * @throws Exception
      */
     public void setBindings(String principal, String roleName, Scope scope, List<ResourcePattern> resources) throws Exception {
-        final var body = mapper.writeValueAsString(new ResourceResponse(scope, resources));
+        final var body = new ResourceResponse(scope, resources);
         final var endpoint = "/security/1.0/principals/" + principal + "/roles/" + roleName + "/bindings";
-        final var request = buildRequest(endpoint, "PUT", body);
-        final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        final var response = put(endpoint, body);
 
         if (response.statusCode() != 204) {
             throw exceptionFromResponse(response);
@@ -254,10 +257,8 @@ public class MdsClient {
      * @return
      */
     public Set<String> roleNamesForPrincipal(String principal, Scope scope) throws Exception {
-        final var scopeStr = mapper.writeValueAsString(scope);
         final var endpoint = "/security/1.0/lookup/principals/" + principal + "/roleNames";
-        final var request = buildPostRequest(endpoint, scopeStr);
-        final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        final var response = post(endpoint, scope);
 
         if (response.statusCode() == 200) {
             return mapper.readValue(response.body(), Set.class);
@@ -276,10 +277,8 @@ public class MdsClient {
      * @return
      */
     public Map<String, Map<String, List<ResourcePattern>>> bindingsForPrincipal(String principal, Scope scope) throws Exception {
-        final var scopeStr = mapper.writeValueAsString(scope);
         final var endpoint = "/security/1.0/lookup/principal/" + principal + "/resources";
-        final var request = buildPostRequest(endpoint, scopeStr);
-        final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        final var response = post(endpoint, scope);
 
         if (response.statusCode() == 200) {
             return mapper.readValue(response.body(), new TypeReference<Map<String, Map<String, List<ResourcePattern>>>>() {
@@ -343,7 +342,6 @@ public class MdsClient {
     public Set<ClusterDescription> getClusters() throws IOException, InterruptedException {
         return getAndParseAs("registry/clusters", new TypeReference<Set<ClusterDescription>>(){});
     }
-
 
 
     /**

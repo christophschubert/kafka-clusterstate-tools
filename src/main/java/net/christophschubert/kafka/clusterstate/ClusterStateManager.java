@@ -61,7 +61,8 @@ public class ClusterStateManager {
                 scopes.forEach(scope ->
                         {
                             try {
-                                final var rbacBindingInScope = MdsTools.extractAllRolebindings(bundle.mdsClient, scope);
+                                Scope t = Scope.forClusterName(scope.clusterName);
+                                final var rbacBindingInScope = MdsTools.extractAllRolebindings(bundle.mdsClient, t);
                                 rbacBindings.addAll(rbacBindingInScope);
                             } catch (IOException e) {
                                 e.printStackTrace();

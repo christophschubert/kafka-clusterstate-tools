@@ -83,8 +83,8 @@ public class ClientBundle {
                     System.out.println("Getting scopes from cluster registry");
                     final var clusters = mdsClient.getClusters();
                     scopes = clusters.stream()
-                            .map(cd -> cd.clusterName)
-                            .map(Scope::forClusterName)
+                            .map(cd -> new Scope(cd.clusterName, cd.scope.get("clusters")))
+                            //.map(Scope::forClusterName)
                             .collect(Collectors.toSet());
                 } catch (IOException e) {
                     e.printStackTrace();
