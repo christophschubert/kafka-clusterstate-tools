@@ -1,10 +1,7 @@
 package net.christophschubert.kafka.clusterstate.formats.domain.compiler;
 
 import net.christophschubert.kafka.clusterstate.*;
-import net.christophschubert.kafka.clusterstate.formats.domain.DataModel;
-import net.christophschubert.kafka.clusterstate.formats.domain.Domain;
-import net.christophschubert.kafka.clusterstate.formats.domain.Project;
-import net.christophschubert.kafka.clusterstate.formats.domain.ProjectSubResource;
+import net.christophschubert.kafka.clusterstate.formats.domain.*;
 import net.christophschubert.kafka.clusterstate.mds.RbacBindingInScope;
 
 import java.util.Collections;
@@ -63,22 +60,17 @@ public class DomainCompiler {
     private final ProjectAuthorizationStrategy<RbacBindingInScope> roleBindingStrategy;
     private final ProjectAuthorizationStrategy<ACLEntry> aclStrategy;
 
-    //TODO: refactor and document properly
-    TopicDataModel convertDataModel(DataModel dm) {
-
+    //TODO: document properly
+    private SerializationInfo ti2si(TypeInformation ti) {
+        if (ti == null) return null;
+        return new SerializationInfo(ti.type, ti.schemaFile);
+    }
+    //TODO: document properly
+    private TopicDataModel convertDataModel(DataModel dm) {
         if (dm == null) {
             return new TopicDataModel(null, null);
         }
-        //TODO: refactor this mess!
-        SerializationInfo key = null;
-        SerializationInfo value = null;
-        if (dm.key != null) {
-            key = new SerializationInfo(dm.key.type, dm.key.schemaFile);
-        }
-        if (dm.value != null) {
-            value = new SerializationInfo(dm.value.type, dm.value.schemaFile);
-        }
-        return new TopicDataModel(key, value);
+        return new TopicDataModel(ti2si(dm.key), ti2si(dm.value));
     }
 
     private <A> Set<A> collectProjects(Domain domain, ProjectAuthorizationStrategy<A> pas, ResourceNamingStrategy rns) {

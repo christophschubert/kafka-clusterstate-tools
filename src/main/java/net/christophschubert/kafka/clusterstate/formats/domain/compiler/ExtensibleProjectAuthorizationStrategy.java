@@ -1,6 +1,5 @@
 package net.christophschubert.kafka.clusterstate.formats.domain.compiler;
 
-import net.christophschubert.kafka.clusterstate.ACLEntry;
 import net.christophschubert.kafka.clusterstate.formats.domain.*;
 
 import java.util.HashSet;
@@ -17,18 +16,18 @@ public class ExtensibleProjectAuthorizationStrategy<A> implements DomainCompiler
      * @param <A> type of access control generated.
      * @param <R> type of the resource.
      */
-    public interface ResourceAclStrategy<A, R extends ProjectSubResource> {
+    public interface ResourceStrategy<A, R extends ProjectSubResource> {
         Set<A> acls(R resource, DomainCompiler.ResourceNamingStrategy namingStrategy);
     }
 
-    private final ResourceAclStrategy<A, Consumer> consumerSubAclStrategy;
-    private final ResourceAclStrategy<A, Producer> producerSubAclStrategy;
-    private final ResourceAclStrategy<A, StreamsApp> streamsAppSubAclStrategy;
+    private final ResourceStrategy<A, Consumer> consumerSubAclStrategy;
+    private final ResourceStrategy<A, Producer> producerSubAclStrategy;
+    private final ResourceStrategy<A, StreamsApp> streamsAppSubAclStrategy;
 
     public ExtensibleProjectAuthorizationStrategy(
-            ResourceAclStrategy<A, Consumer> consumerSubAclStrategy,
-            ResourceAclStrategy<A, Producer> producerSubAclStrategy,
-            ResourceAclStrategy<A, StreamsApp> streamsAppSubAclStrategy
+            ResourceStrategy<A, Consumer> consumerSubAclStrategy,
+            ResourceStrategy<A, Producer> producerSubAclStrategy,
+            ResourceStrategy<A, StreamsApp> streamsAppSubAclStrategy
     ) {
         this.consumerSubAclStrategy = consumerSubAclStrategy;
         this.producerSubAclStrategy = producerSubAclStrategy;

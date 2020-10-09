@@ -41,7 +41,7 @@ public class DefaultStrategies {
      * @param <A> type of the access control entry assigned
      * @param <R> type of the resource
      */
-    static class EmptyAclStrategy<A, R extends ProjectSubResource> implements ExtensibleProjectAuthorizationStrategy.ResourceAclStrategy<A, R> {
+    static class EmptyAclStrategy<A, R extends ProjectSubResource> implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<A, R> {
 
         @Override
         public Set<A> acls(R resource, DomainCompiler.ResourceNamingStrategy namingStrategy) {
@@ -50,7 +50,7 @@ public class DefaultStrategies {
     }
 
     //TODO: add descriptions of produced ACLs
-    static class ConsumerAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceAclStrategy<ACLEntry, Consumer> {
+    static class ConsumerAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<ACLEntry, Consumer> {
         @Override
         public Set<ACLEntry> acls(Consumer consumer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
             final Project project = consumer.parent;
@@ -61,7 +61,7 @@ public class DefaultStrategies {
     }
 
     //TODO: add descriptions of produced ACLs
-    static class DefaultProducerAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceAclStrategy<ACLEntry, Producer> {
+    static class DefaultProducerAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<ACLEntry, Producer> {
 
         @Override
         public Set<ACLEntry> acls(Producer producer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
@@ -75,7 +75,7 @@ public class DefaultStrategies {
     /**
      *
      */
-    static class DefaultStreamsAppAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceAclStrategy<ACLEntry, StreamsApp> {
+    static class DefaultStreamsAppAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<ACLEntry, StreamsApp> {
 
         @Override
         public Set<ACLEntry> acls(StreamsApp streamsApp, DomainCompiler.ResourceNamingStrategy namingStrategy) {
