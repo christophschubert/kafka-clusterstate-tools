@@ -3,6 +3,11 @@ package net.christophschubert.kafka.clusterstate;
 import java.util.Objects;
 import java.util.function.Function;
 
+/**
+ * Helper class which contains a pair of elements (before and after).
+ *
+ * @param <T> type of the elements.
+ */
 public class Update<T> {
     public final T before;
     public final T after;
