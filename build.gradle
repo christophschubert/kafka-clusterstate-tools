@@ -11,7 +11,7 @@ sourceCompatibility = 1.11
 
 jar {
     manifest {
-        attributes "Main-Class": "net.christophschubert.kafka.clusterstate.CLI"
+        attributes "Main-Class": "net.christophschubert.kafka.clusterstate.cli.CLI"
     }
 
     from {
