@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.schemaregistry.avro.AvroSchemaProvider;
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClientConfig;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import io.confluent.kafka.schemaregistry.json.JsonSchemaProvider;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchemaProvider;
@@ -56,7 +57,15 @@ public class ClientBundle {
         if (properties.containsKey("schema.registry.url")) {
             final var srBaseUrl = properties.get("schema.registry.url").toString();
             final var restService = new RestService(srBaseUrl);
-
+            final var srProperties = new HashMap<String,Object>();
+            properties.entrySet().stream()
+                .filter(p -> p.getKey().toString().startsWith(SchemaRegistryClientConfig.CLIENT_NAMESPACE))
+                .forEach(p -> srProperties.put(
+                    p.getKey().toString().replace(SchemaRegistryClientConfig.CLIENT_NAMESPACE, ""),
+                    p.getValue()
+                )
+            );
+            restService.configure(srProperties);
             srClient = new CachedSchemaRegistryClient(restService, 100,
                     //TODO: make list of loaded providers configurable to allow for custom providers
                     List.of(new AvroSchemaProvider(), new ProtobufSchemaProvider(), new JsonSchemaProvider()),
