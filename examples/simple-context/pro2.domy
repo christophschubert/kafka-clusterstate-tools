@@ -4,6 +4,8 @@ projects:
 - name: helloproj
   topics:
     - name: topicA
+      config:
+        retention.ms: "10000"
     - name: topicB
       dataModel:
         key:
