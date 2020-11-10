@@ -1,4 +1,4 @@
-package net.christophschubert.kafka.clusterstate;
+package net.christophschubert.kafka.clusterstate.utils;
 
 import org.junit.Test;
 
@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class SetsTest {
 

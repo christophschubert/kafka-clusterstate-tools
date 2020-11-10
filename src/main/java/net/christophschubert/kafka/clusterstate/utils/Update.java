@@ -1,4 +1,4 @@
-package net.christophschubert.kafka.clusterstate;
+package net.christophschubert.kafka.clusterstate.utils;
 
 import java.util.Objects;
 import java.util.function.Function;

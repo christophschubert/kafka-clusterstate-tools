@@ -1,6 +1,6 @@
 package net.christophschubert.kafka.clusterstate.cli;
 
-import net.christophschubert.kafka.clusterstate.MapTools;
+import net.christophschubert.kafka.clusterstate.utils.MapTools;
 import net.christophschubert.kafka.clusterstate.formats.domain.DomainParser;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.slf4j.Logger;

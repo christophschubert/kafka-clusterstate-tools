@@ -11,6 +11,7 @@ import net.christophschubert.kafka.clusterstate.formats.domain.compiler.RbacStra
 import net.christophschubert.kafka.clusterstate.mds.ClusterRegistry;
 import net.christophschubert.kafka.clusterstate.mds.Scope;
 import net.christophschubert.kafka.clusterstate.utils.FunctionTools;
+import net.christophschubert.kafka.clusterstate.utils.MapTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;

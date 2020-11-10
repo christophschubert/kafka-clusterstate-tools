@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import net.christophschubert.kafka.clusterstate.mds.RbacBinding;
 import net.christophschubert.kafka.clusterstate.mds.RbacBindingInScope;
+import net.christophschubert.kafka.clusterstate.utils.MapTools;
+import net.christophschubert.kafka.clusterstate.utils.Sets;
 
 import java.util.*;
 import java.util.stream.Collectors;
