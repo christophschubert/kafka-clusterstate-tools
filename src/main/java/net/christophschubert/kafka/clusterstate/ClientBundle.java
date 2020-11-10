@@ -9,9 +9,9 @@ import io.confluent.kafka.schemaregistry.client.SchemaRegistryClientConfig;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import io.confluent.kafka.schemaregistry.json.JsonSchemaProvider;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchemaProvider;
-import net.christophschubert.kafka.clusterstate.mds.ClusterDescription;
 import net.christophschubert.kafka.clusterstate.mds.MdsClient;
 import net.christophschubert.kafka.clusterstate.mds.Scope;
+import net.christophschubert.kafka.clusterstate.utils.MapTools;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 
@@ -25,9 +25,13 @@ import java.util.stream.Collectors;
  */
 public class ClientBundle {
 
+    public final static String SCHEMA_REGISTRY_URL_CONFIG = "schema.registry.url";
     public final static String MDS_SERVER_URL_CONFIG = "mds.server.url";
     public final static String MDS_SERVER_USERNAME_CONFIG = "mds.server.login";
     public final static String MDS_SERVER_PASSWORD_CONFIG = "mds.server.password";
+
+    public final static String MDS_SCOPE_FILE_CONFIG = "mds.scope.file";
+    public final static String MDS_USE_CLUSTER_REGISTRY_CONFIG = "mds.use.cluster.registry";
 
     public final Admin adminClient;
     public final SchemaRegistryClient schemaRegistryClient;
@@ -54,16 +58,15 @@ public class ClientBundle {
 
     public static ClientBundle fromProperties(Properties properties, File context) {
         SchemaRegistryClient srClient = null;
-        if (properties.containsKey("schema.registry.url")) {
-            final var srBaseUrl = properties.get("schema.registry.url").toString();
+
+        if (properties.containsKey(SCHEMA_REGISTRY_URL_CONFIG)) {
+            final var srBaseUrl = properties.get(SCHEMA_REGISTRY_URL_CONFIG).toString();
             final var restService = new RestService(srBaseUrl);
-            final var srProperties = new HashMap<String,Object>();
-            properties.entrySet().stream()
-                .filter(p -> p.getKey().toString().startsWith(SchemaRegistryClientConfig.CLIENT_NAMESPACE))
-                .forEach(p -> srProperties.put(
-                    p.getKey().toString().replace(SchemaRegistryClientConfig.CLIENT_NAMESPACE, ""),
-                    p.getValue()
-                )
+
+            final var srConfigPrefix = SchemaRegistryClientConfig.CLIENT_NAMESPACE;
+            final var srProperties = MapTools.filterMapKeys(properties,
+                    pName -> pName.toString().startsWith(srConfigPrefix),
+                    pName -> pName.toString().replace(srConfigPrefix, "")
             );
             restService.configure(srProperties);
             srClient = new CachedSchemaRegistryClient(restService, 100,
@@ -80,14 +83,14 @@ public class ClientBundle {
                     properties.get(MDS_SERVER_URL_CONFIG).toString()
             );
 
-            if (properties.containsKey("mds.scope.file")) {
+            if (properties.containsKey(MDS_SCOPE_FILE_CONFIG)) {
                 ObjectMapper mapper = new ObjectMapper();
                 try {
-                    scopes = mapper.readValue(new File(context.toString(), properties.get("mds.scope.file").toString()), new TypeReference<Set<Scope>>() {});
+                    scopes = mapper.readValue(new File(context.toString(), properties.get(MDS_SCOPE_FILE_CONFIG).toString()), new TypeReference<Set<Scope>>() {});
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            } else if (Boolean.parseBoolean(properties.getProperty("mds.use.cluster.registry", "false"))) {
+            } else if (Boolean.parseBoolean(properties.getProperty(MDS_USE_CLUSTER_REGISTRY_CONFIG, "false"))) {
                 try {
                     System.out.println("Getting scopes from cluster registry");
                     final var clusters = mdsClient.getClusters();
