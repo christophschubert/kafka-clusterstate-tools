@@ -7,7 +7,13 @@ version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.11
 
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
 
+    group 'net.christophschubert'
+    version '1.0-SNAPSHOT'
+}
 
 jar {
     manifest {
