@@ -6,7 +6,11 @@ import net.christophschubert.kafka.clusterstate.mds.RbacBinding;
 import net.christophschubert.kafka.clusterstate.mds.RbacBindingInScope;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
+/**
+ * Main model class to hold the static metadata state of a cluster.
+ */
 public class ClusterState {
     @JsonProperty("aclsEntries")
     Set<ACLEntry> aclsEntries;
@@ -61,6 +65,46 @@ public class ClusterState {
                 MapTools.filterKeys(topicDescriptions, s -> s.startsWith(prefix)),
                 managedTopicPrefixes // TODO: should this be filtered?
         );
+    }
+
+    /**
+     * Change principals in the according to the mapping provided.
+     *
+     * @param principalMap mapping of the principal-names
+     * @return a new ClusterState with rewritten principals
+     */
+    public ClusterState mapPrincipals(Map<String, String> principalMap) {
+         return new ClusterState(
+                 this.aclsEntries.stream().map(aclEntry -> {
+                     if (principalMap.containsKey(aclEntry.principal)) {
+                         return new ACLEntry(
+                                 aclEntry.operation,
+                                 principalMap.get(aclEntry.principal),
+                                 aclEntry.host,
+                                 aclEntry.permissionType,
+                                 aclEntry.resourceName,
+                                 aclEntry.resourceType,
+                                 aclEntry.patternType
+                         );
+                     }
+                     return aclEntry;
+                 }).collect(Collectors.toSet()),
+                 this.roleBindings.stream().map(bindingInScope -> {
+                     final String originalPrincipal = bindingInScope.binding.principal;
+                     if (principalMap.containsKey(originalPrincipal)) {
+                         return new RbacBindingInScope(
+                                 new RbacBinding(
+                                         principalMap.get(originalPrincipal),
+                                         bindingInScope.binding.roleName,
+                                         bindingInScope.binding.resourcePattern
+                                 ),
+                                 bindingInScope.scope);
+                     }
+                     return bindingInScope;
+                 }).collect(Collectors.toSet()),
+                 this.topicDescriptions,
+                 this.managedTopicPrefixes
+         );
     }
 
 

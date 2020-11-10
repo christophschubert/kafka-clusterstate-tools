@@ -1,15 +1,21 @@
 package net.christophschubert.kafka.clusterstate;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
 import java.util.stream.Collectors;
 
 public class MapTools {
+
+    private static Logger logger = LoggerFactory.getLogger(MapTools.class);
 
     public static <K,V1, V2> Map<K, V2> mapValues(Map<K, V1> map, Function<V1, V2> valueMapper) {
         return map.entrySet().stream()
@@ -44,12 +50,26 @@ public class MapTools {
     }
 
     public static <K,V> Map<K, List<V>> groupBy(List<V> input, Function<V, K> keyExtractor) {
-        Map<K, List<V>> grouped = new HashMap<>();
+        final Map<K, List<V>> grouped = new HashMap<>();
         input.forEach(v -> {
             final K key = keyExtractor.apply(v);
             grouped.computeIfAbsent(key, k -> new ArrayList<>());
             grouped.get(key).add(v);
         });
         return grouped;
+    }
+
+    public static <T> Map<T, T> mapFromList(List<T> input, Function<T, List<T>> splitter) {
+        final Map<T, T> result = new HashMap<>();
+
+        for (T t : input) {
+            final var list = splitter.apply(t);
+            if (list.size() == 2) {
+                result.put(list.get(0), list.get(1));
+            } else {
+                logger.error("entry {} cannot be split into two parts, skipping it", t);
+            }
+        }
+        return result;
     }
 }
