@@ -19,6 +19,13 @@ public class MapToolsTest {
     }
 
     @Test
+    public void filterMapKeysTest() {
+        final var input = Map.of("keep1", "v1", "drop", "dropMe", "keep2", "v2");
+        final var result = MapTools.filterMapKeys(input, s -> s.startsWith("keep"), String::toUpperCase);
+        assertEquals(Map.of("KEEP1", "v1", "KEEP2" ,"v2"), result);
+    }
+
+    @Test
     public void mapFromListTest() {
         final var list = List.of("ab:tv", "ac:b", "abcd", "x:y:z", "ac:new");
         assertEquals(

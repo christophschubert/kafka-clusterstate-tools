@@ -54,6 +54,17 @@ public class MapTools {
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> valueMapper.apply(e.getValue())));
     }
 
+    /**
+     * Filters a map to contain those keys satisfying a predicate and transforms the keys with a transformation
+     *
+     * @param map input map
+     * @param p predicate to test keys against
+     * @param keyMapper transformer for keys
+     * @param <K1> input key type
+     * @param <K2> output key type
+     * @param <V> value type
+     * @return a map restricted to those keys satisfying p and being transformed with keyMapper
+     */
     public static <K1, K2, V> Map<K2, V> filterMapKeys(Map<K1, V> map, Predicate<K1> p, Function<K1, K2> keyMapper) {
         return map.entrySet().stream()
                 .filter(kvEntry -> p.test(kvEntry.getKey()))
