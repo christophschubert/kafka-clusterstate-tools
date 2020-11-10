@@ -90,11 +90,10 @@ class CLI {
 
 
         //perform additional transformations
-        final List<Function<ClusterState, ClusterState>> stateTransforms = Collections.emptyList();
+        final List<Function<ClusterState, ClusterState>> stateTransforms = new ArrayList<>();
         final String principalMappingEnvVarName = "KST_PRINCIPAL_MAPPING";
         if (System.getenv(principalMappingEnvVarName) != null) {
-            final List<String> parts = Arrays.asList(System.getenv(principalMappingEnvVarName).split(Pattern.quote(";")));
-            final var principalMap = MapTools.mapFromList(parts, s -> Arrays.asList(s.split(Pattern.quote(","))));
+            final var principalMap = CLITools.parsePrincipalMapping(System.getenv(principalMappingEnvVarName));
             stateTransforms.add(cs -> cs.mapPrincipals(principalMap));
         }
 
