@@ -35,7 +35,7 @@ public class ClusterStateTest {
         );
 
         final var mappedPrincipals = original.mapPrincipals(principalMap);
-        assertEquals(Set.of(entryAlias1Mapped, entryKeepMe), mappedPrincipals.aclsEntries);
+        assertEquals(Set.of(entryAlias1Mapped, entryKeepMe), mappedPrincipals.aclEntries);
         assertEquals(Set.of(bindingAlias2Mapped, bindingKeepMe), mappedPrincipals.roleBindings);
     }
 }

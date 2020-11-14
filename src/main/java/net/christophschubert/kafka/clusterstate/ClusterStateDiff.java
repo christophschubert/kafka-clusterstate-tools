@@ -24,8 +24,8 @@ public class ClusterStateDiff {
     // typical use case: after is 'desired' state, before is 'current' state
 
     public ClusterStateDiff(ClusterState before, ClusterState after) {
-        this.addedAclEntries = Sets.setMinus(after.aclsEntries, before.aclsEntries);
-        this.deletedAclEntries = Sets.setMinus(before.aclsEntries, after.aclsEntries);
+        this.addedAclEntries = Sets.setMinus(after.aclEntries, before.aclEntries);
+        this.deletedAclEntries = Sets.setMinus(before.aclEntries, after.aclEntries);
 
         this.addedRbacBindings = Sets.setMinus(after.roleBindings, before.roleBindings);
         this.deletedRbacBindings = Sets.setMinus(before.roleBindings, after.roleBindings);

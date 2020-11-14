@@ -46,6 +46,9 @@ public class Cluster {
     @JsonProperty("clientProperties")
     public final Map<String, Map<String, String>> clientProperties;
 
+
+    String pathToClusterLevelPriviledges;
+    Set<String> pathstoDomainDescriptions;
     @JsonCreator
     public Cluster(
             @JsonProperty("type") String type,
