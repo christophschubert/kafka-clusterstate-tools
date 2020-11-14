@@ -1,6 +1,5 @@
 package net.christophschubert.kafka.clusterstate;
 
-
 import net.christophschubert.kafka.clusterstate.mds.RbacBindingInScope;
 import net.christophschubert.kafka.clusterstate.utils.MapTools;
 import net.christophschubert.kafka.clusterstate.utils.Sets;
@@ -22,8 +21,6 @@ public class ClusterStateDiff {
     final Map<String, Update<TopicDescription>> updatedTopicConfigs;
     final Map<String, TopicDataModel> addedSchemaPaths;
 
-     //TODO: add added/deleted RBAC bindings
-
     // typical use case: after is 'desired' state, before is 'current' state
 
     public ClusterStateDiff(ClusterState before, ClusterState after) {
@@ -32,11 +29,6 @@ public class ClusterStateDiff {
 
         this.addedRbacBindings = Sets.setMinus(after.roleBindings, before.roleBindings);
         this.deletedRbacBindings = Sets.setMinus(before.roleBindings, after.roleBindings);
-
-        System.out.println("before " + before.roleBindings);
-        System.out.println("after " + after.roleBindings);
-        System.out.println("added " + addedRbacBindings);
-        System.out.println("deleted " + deletedRbacBindings);
 
         //TODO: think about whether we have to prevent ACLs for internal topics (topics
         // created by streams app) to be removed
