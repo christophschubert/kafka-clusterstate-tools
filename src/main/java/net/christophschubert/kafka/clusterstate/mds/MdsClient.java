@@ -21,9 +21,9 @@ public class MdsClient {
     private final String password;
     private final String baseUrl;
 
-    final HttpClient client = HttpClient.newBuilder().build();
+    private final HttpClient client = HttpClient.newBuilder().build();
 
-    final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public MdsClient(String username, String password, String baseUrl) {
         this.username = username;
@@ -40,10 +40,6 @@ public class MdsClient {
 
     }
 
-    private HttpRequest buildPostRequest(String endpoint, String body) {
-        return buildRequest(endpoint, "POST", body);
-    }
-
     private HttpRequest buildRequest(String endpoint, String method, String body) {
         return HttpRequest.newBuilder(URI.create(baseUrl + endpoint))
                 .method(method, HttpRequest.BodyPublishers.ofString(body))
@@ -53,14 +49,16 @@ public class MdsClient {
     }
 
     /**
-     * @param endpoint
-     * @param payload
-     * @param <T>
-     * @return
+     * Issues a post request to an endpoint.
+     *
+     * @param endpoint the endpoint
+     * @param payload payload, will be serialized to JSON
+     * @param <T> type of the body
+     * @return the result of the request
      */
     <T> HttpResponse<String> post(String endpoint, T payload) throws IOException, InterruptedException {
         final var body = mapper.writeValueAsString(payload);
-        final var request = buildPostRequest(endpoint, body);
+        final var request = buildRequest(endpoint, "POST", body);
         return client.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
@@ -372,7 +370,15 @@ public class MdsClient {
         }
     }
 
-    // wraps DELETE /security/1.0/registry/clusters/{clusterName}
+    /**
+     * Delete a named cluster.
+     *
+     * Wraps DELETE /security/1.0/registry/clusters/{clusterName}
+     *
+     * @param clusterName name of the cluster to be deleted
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public void deleteCluster(String clusterName) throws IOException, InterruptedException {
         delete("registry/clusters/" + clusterName, "");
     }

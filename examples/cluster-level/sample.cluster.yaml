@@ -1,0 +1,5 @@
+---
+acls:
+  idempotentWritePrincipals:
+    - User:abc
+    - User:xyz

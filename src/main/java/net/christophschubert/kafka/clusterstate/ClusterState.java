@@ -4,28 +4,35 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import net.christophschubert.kafka.clusterstate.mds.RbacBinding;
 import net.christophschubert.kafka.clusterstate.mds.RbacBindingInScope;
+import net.christophschubert.kafka.clusterstate.utils.MapTools;
+import net.christophschubert.kafka.clusterstate.utils.Sets;
+import org.apache.kafka.common.resource.ResourceType;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
+/**
+ * Main model class to hold the static metadata state of a cluster.
+ */
 public class ClusterState {
-    @JsonProperty("aclsEntries")
-    Set<ACLEntry> aclsEntries;
+    @JsonProperty("aclEntries")
+    final Set<ACLEntry> aclEntries;
     @JsonProperty("roleBindings")
-    Set<RbacBindingInScope> roleBindings;
+    final Set<RbacBindingInScope> roleBindings;
     @JsonProperty("topicDescriptions")
-    Map<String, TopicDescription> topicDescriptions;
+    final Map<String, TopicDescription> topicDescriptions;
 
     @JsonProperty("managedTopicPrefixes")
-    Set<String> managedTopicPrefixes;
+    final Set<String> managedTopicPrefixes;
 
     @JsonCreator
     public ClusterState(
-            @JsonProperty("aclsEntries") Set<ACLEntry> aclsEntries,
+            @JsonProperty("aclEntries") Set<ACLEntry> aclEntries,
             @JsonProperty("roleBindings") Set<RbacBindingInScope> roleBindings,
             @JsonProperty("topicDescriptions") Map<String, TopicDescription> topicDescriptions,
             @JsonProperty("managedTopicPrefixes") Set<String> managedTopicPrefixes
     ) {
-        this.aclsEntries = aclsEntries;
+        this.aclEntries = aclEntries;
         this.roleBindings = roleBindings;
         this.topicDescriptions = topicDescriptions;
         this.managedTopicPrefixes = managedTopicPrefixes;
@@ -33,7 +40,7 @@ public class ClusterState {
 
     /**
      * returns a new Set containing the topic names in this clusterstate.
-     * @return
+     * @return names of all topics in the topicDescriptions.
      */
     public Set<String> topicNames() {
         return new HashSet<>(topicDescriptions.keySet());
@@ -45,29 +52,81 @@ public class ClusterState {
      * This is particular useful to delete/update topics for one project which is part of a larger
      * context: do a diff of the project description with a ClusterState filtered by the name-space
      * (prefix) of the project.
-     * @param prefix
-     * @return
+     * @param prefix resource-name prefix
+     * @return a new ClusterState which contains only resources with the given prefix.
      */
     public ClusterState filterByPrefix(String prefix) {
-        /** Implementation note:
-         *
+        /* Implementation note:
          * maybe we should another constructor which automatically filters for the prefix.
          */
         Objects.requireNonNull(prefix);
 
         return new ClusterState(
-                Sets.filter(aclsEntries, aclEntry -> aclEntry.resourceName().startsWith(prefix)),
-                roleBindings, // TODO: filter rolebindings
+                Sets.filter(aclEntries, aclEntry -> aclEntry.resourceName().startsWith(prefix)),
+                Sets.filter(roleBindings, rb -> rb.binding.resourcePattern.name.startsWith(prefix)),
                 MapTools.filterKeys(topicDescriptions, s -> s.startsWith(prefix)),
                 managedTopicPrefixes // TODO: should this be filtered?
         );
+    }
+
+    /**
+     * Returns a copy of this cluster state containing only the cluster-level ACLs
+     * and RBAC rolebindings.
+     *
+     * @return a copy of this ClusterState containing only cluster-level role and ACL bindings.
+     */
+    public ClusterState filterClusterLevel() {
+        return new Builder(this)
+                .withAclEntries(Sets.filter(this.aclEntries, entry -> entry.resourceType == ResourceType.CLUSTER))
+                .withRoleBindingsEntries(Sets.filter(this.roleBindings, RbacBindingInScope::isClusterLevel))
+                .build();
+    }
+
+    /**
+     * Change principals in the according to the mapping provided.
+     *
+     * @param principalMap mapping of the principal-names
+     * @return a new ClusterState with rewritten principals
+     */
+    public ClusterState mapPrincipals(Map<String, String> principalMap) {
+         return new ClusterState(
+                 this.aclEntries.stream().map(aclEntry -> {
+                     if (principalMap.containsKey(aclEntry.principal)) {
+                         return new ACLEntry(
+                                 aclEntry.operation,
+                                 principalMap.get(aclEntry.principal),
+                                 aclEntry.host,
+                                 aclEntry.permissionType,
+                                 aclEntry.resourceName,
+                                 aclEntry.resourceType,
+                                 aclEntry.patternType
+                         );
+                     }
+                     return aclEntry;
+                 }).collect(Collectors.toSet()),
+                 this.roleBindings.stream().map(bindingInScope -> {
+                     final String originalPrincipal = bindingInScope.binding.principal;
+                     if (principalMap.containsKey(originalPrincipal)) {
+                         return new RbacBindingInScope(
+                                 new RbacBinding(
+                                         principalMap.get(originalPrincipal),
+                                         bindingInScope.binding.roleName,
+                                         bindingInScope.binding.resourcePattern
+                                 ),
+                                 bindingInScope.scope);
+                     }
+                     return bindingInScope;
+                 }).collect(Collectors.toSet()),
+                 this.topicDescriptions,
+                 this.managedTopicPrefixes
+         );
     }
 
 
 
     public ClusterState merge(ClusterState other) {
         final var mergedRoleBindings = Sets.union(this.roleBindings, other.roleBindings);
-        final var mergedAclEntries = Sets.union(this.aclsEntries, other.aclsEntries);
+        final var mergedAclEntries = Sets.union(this.aclEntries, other.aclEntries);
         final var mergedTopicDescriptions = new HashMap<>(this.topicDescriptions);
         mergedTopicDescriptions.putAll(other.topicDescriptions);
 
@@ -81,20 +140,62 @@ public class ClusterState {
 
 
 
-    public static final ClusterState empty = new ClusterState(
-            Collections.emptySet(),
-            Collections.emptySet(),
-            Collections.emptyMap(),
-            Collections.emptySet()
-    );
+    public static final ClusterState empty = new ClusterState.Builder().build();
+
 
     @Override
     public String toString() {
         return "ClusterState{" +
-                "aclsEntries=" + aclsEntries +
+                "aclEntries=" + aclEntries +
                 ", roleBindings=" + roleBindings +
                 ", topicDescriptions=" + topicDescriptions +
                 ", managedTopicPrefixes=" + managedTopicPrefixes +
                 '}';
+    }
+
+    public static class Builder {
+
+        private Set<ACLEntry> aclsEntries;
+        private Set<RbacBindingInScope> roleBindings;
+        private Map<String, TopicDescription> topicDescriptions;
+        private Set<String> managedTopicPrefixes;
+
+        public Builder() {
+            aclsEntries = Collections.emptySet();
+            roleBindings = Collections.emptySet();
+            topicDescriptions = Collections.emptyMap();
+            managedTopicPrefixes = Collections.emptySet();
+        }
+
+        public Builder(ClusterState state) {
+            this.aclsEntries = state.aclEntries;
+            this.roleBindings = state.roleBindings;
+            this.topicDescriptions = state.topicDescriptions;
+            this.managedTopicPrefixes = state.managedTopicPrefixes;
+        }
+
+        public Builder withAclEntries(Set<ACLEntry> entries) {
+            this.aclsEntries = entries;
+            return this;
+        }
+
+        public Builder withRoleBindingsEntries(Set<RbacBindingInScope> roleBindings) {
+            this.roleBindings = roleBindings;
+            return this;
+        }
+
+        public Builder withTopicDescriptions(Map<String, TopicDescription> topicDescriptions) {
+            this.topicDescriptions = topicDescriptions;
+            return this;
+        }
+
+        public Builder withManagedTopicPrefixes(Set<String> managedTopicPrefixes) {
+            this.managedTopicPrefixes = managedTopicPrefixes;
+            return this;
+        }
+
+        public ClusterState build() {
+            return new ClusterState(aclsEntries, roleBindings, topicDescriptions, managedTopicPrefixes);
+        }
     }
 }

@@ -10,6 +10,8 @@ import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DomainCo
 import net.christophschubert.kafka.clusterstate.formats.domain.compiler.RbacStrategies;
 import net.christophschubert.kafka.clusterstate.mds.ClusterRegistry;
 import net.christophschubert.kafka.clusterstate.mds.Scope;
+import net.christophschubert.kafka.clusterstate.utils.FunctionTools;
+import net.christophschubert.kafka.clusterstate.utils.MapTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -19,10 +21,10 @@ import picocli.CommandLine.Option;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -87,10 +89,19 @@ class CLI {
         }
 
 
+        //perform additional transformations
+        final List<Function<ClusterState, ClusterState>> stateTransforms = new ArrayList<>();
+        final String principalMappingEnvVarName = "KST_PRINCIPAL_MAPPING";
+        if (System.getenv(principalMappingEnvVarName) != null) {
+            final var principalMap = CLITools.parsePrincipalMapping(System.getenv(principalMappingEnvVarName));
+            stateTransforms.add(cs -> cs.mapPrincipals(principalMap));
+        }
+
         final var groupedDomains = MapTools.groupBy(domains, Domain::name);
         final Map<String, ClusterState> clusterStateByDomain =
                 MapTools.mapValues(groupedDomains, domainList -> domainList.stream()
                         .map(compiler::compile)
+                        .map(cs -> FunctionTools.apply(stateTransforms, cs))
                         .reduce(ClusterState.empty, ClusterState::merge)
                 );
 
@@ -98,6 +109,7 @@ class CLI {
         clusterStateByDomain.forEach((domainName, desiredState) -> {
             logger.info("\t" + domainName + ": " + desiredState + "\n");
         });
+
 
 
         final ClusterState currentState = ClusterStateManager.build(bundle);

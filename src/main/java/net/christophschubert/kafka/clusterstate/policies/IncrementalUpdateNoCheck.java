@@ -1,6 +1,6 @@
 package net.christophschubert.kafka.clusterstate.policies;
 
-import net.christophschubert.kafka.clusterstate.Update;
+import net.christophschubert.kafka.clusterstate.utils.Update;
 import net.christophschubert.kafka.clusterstate.actions.Action;
 import net.christophschubert.kafka.clusterstate.actions.IncrementallyUpdateTopicAction;
 

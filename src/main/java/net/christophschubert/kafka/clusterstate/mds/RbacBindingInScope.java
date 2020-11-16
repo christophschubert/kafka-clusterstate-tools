@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
+import java.util.Set;
 
 public class RbacBindingInScope {
     @JsonProperty("binding")
@@ -19,6 +20,19 @@ public class RbacBindingInScope {
     ) {
         this.binding = binding;
         this.scope = scope;
+    }
+
+    public boolean isClusterLevel() {
+        final Set<String> clusterRoleNames = Set.of(
+                "super.user",
+                "SystemAdmin",
+                "ClusterAdmin",
+                "UserAdmin",
+                "SecurityAdmin",
+                "AuditAdmin",
+                "Operator"
+        );
+        return clusterRoleNames.contains(binding.roleName);
     }
 
     @Override
