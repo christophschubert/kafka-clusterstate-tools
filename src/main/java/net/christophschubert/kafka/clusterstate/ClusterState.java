@@ -16,14 +16,14 @@ import java.util.stream.Collectors;
  */
 public class ClusterState {
     @JsonProperty("aclEntries")
-    final Set<ACLEntry> aclEntries;
+    public final Set<ACLEntry> aclEntries;
     @JsonProperty("roleBindings")
-    final Set<RbacBindingInScope> roleBindings;
+    public final Set<RbacBindingInScope> roleBindings;
     @JsonProperty("topicDescriptions")
-    final Map<String, TopicDescription> topicDescriptions;
+    public final Map<String, TopicDescription> topicDescriptions;
 
     @JsonProperty("managedTopicPrefixes")
-    final Set<String> managedTopicPrefixes;
+    public final Set<String> managedTopicPrefixes;
 
     @JsonCreator
     public ClusterState(
@@ -151,6 +151,10 @@ public class ClusterState {
                 ", topicDescriptions=" + topicDescriptions +
                 ", managedTopicPrefixes=" + managedTopicPrefixes +
                 '}';
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static class Builder {
