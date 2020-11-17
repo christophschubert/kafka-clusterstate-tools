@@ -3,12 +3,13 @@ package net.christophschubert.kafka.clusterstate;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Model class for a topic in a Kafka cluster.
+ */
 public class TopicDescription {
     private final String name;
     private final Map<String, String> configs;
