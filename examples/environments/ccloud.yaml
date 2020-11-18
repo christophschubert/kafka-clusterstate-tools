@@ -122,7 +122,7 @@ clusters:
         # technical details for accessing kafka-service
         bootstrap.servers: pkc-4yyd6.us-east1.gcp.confluent.cloud:9092
         security.protocol: SASL_SSL
-        sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule   required username="{CLUSTER_API_KEY}"   password="${CLUSTER_API_SECRET}";
+        sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule   required username="${CLUSTER_API_KEY}"   password="${CLUSTER_API_SECRET}";
         sasl.mechanism: PLAIN
       # technical details for accessing schema-registry-service
       schemaRegistry:
