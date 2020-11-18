@@ -59,7 +59,7 @@ public class ClusterStateDiff {
 
         //currently, we just consider all schemas to be new
         this.addedSchemaPaths =
-        MapTools.mapValues(after.topicDescriptions, TopicDescription::dataModel);
+        MapTools.mapValuesDropNull(after.topicDescriptions, TopicDescription::dataModel);
     }
 
 

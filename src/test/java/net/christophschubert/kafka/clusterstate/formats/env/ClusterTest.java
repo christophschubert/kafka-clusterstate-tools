@@ -54,7 +54,7 @@ public class ClusterTest {
                 "#\n" +
                 "# Here, we have only essential properties, no optional Kubernetes stack and no graph-db.\n" +
                 "#\n" +
-                "- type: QA-Cluster\n" +
+                "- type: QA-CloudCluster\n" +
                 "    # from cloud ui\n" +
                 "  clusterId: lkc-jwxyz\n" +
                 "  clusterType: basic\n" +
@@ -87,7 +87,7 @@ public class ClusterTest {
                 "#\n" +
                 "# Here, we have only essential properties, no optional Kubernetes stack and no graph-db.\n" +
                 "#\n" +
-                "- type: PROD-Cluster\n" +
+                "- type: PROD-CloudCluster\n" +
                 "  # from cloud ui\n" +
                 "  clusterId: lkc-jwxyz\n" +
                 "  clusterType: basic\n" +

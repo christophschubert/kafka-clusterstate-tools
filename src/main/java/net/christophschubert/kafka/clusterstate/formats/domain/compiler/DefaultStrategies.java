@@ -32,7 +32,8 @@ public class DefaultStrategies {
     public static final ExtensibleProjectAuthorizationStrategy<ACLEntry> aclStrategy = new ExtensibleProjectAuthorizationStrategy<>(
             new ConsumerAclStrategy(),
             new DefaultProducerAclStrategy(),
-            new DefaultStreamsAppAclStrategy()
+            new DefaultStreamsAppAclStrategy(),
+            new DefaultTopicForeignAclStrategy()
     );
 
     /**
@@ -42,7 +43,6 @@ public class DefaultStrategies {
      * @param <R> type of the resource
      */
     static class EmptyAclStrategy<A, R extends ProjectSubResource> implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<A, R> {
-
         @Override
         public Set<A> acls(R resource, DomainCompiler.ResourceNamingStrategy namingStrategy) {
             return Collections.emptySet();
@@ -50,6 +50,7 @@ public class DefaultStrategies {
     }
 
     //TODO: add descriptions of produced ACLs
+    //TODO: rename!
     static class ConsumerAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<ACLEntry, Consumer> {
         @Override
         public Set<ACLEntry> acls(Consumer consumer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
@@ -72,6 +73,22 @@ public class DefaultStrategies {
         }
     }
 
+    static class DefaultTopicForeignAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<ACLEntry, Topic> {
+
+        @Override
+        public Set<ACLEntry> acls(Topic topic, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+            final var topicName = namingStrategy.name(topic);
+            final var acls = new HashSet<ACLEntry>();
+            topic.producerPrincipals.forEach(
+                    principal -> acls.add(AclEntries.allowAnyHostLiteral(AclOperation.WRITE, principal, topicName, ResourceType.TOPIC))
+            );
+            topic.consumerPrincipals.forEach(
+                    principal -> acls.add(AclEntries.allowAnyHostLiteral(AclOperation.READ, principal, topicName, ResourceType.TOPIC))
+            );
+            return acls;
+        }
+    }
+
     /**
      *
      */
@@ -88,10 +105,15 @@ public class DefaultStrategies {
             aclEntries.addAll(writeAcls(principal, project, streamsApp.outputTopics, namingStrategy));
             aclEntries.addAll(readAcls(principal, project, qualifiedName, streamsApp.prefixApplicationId, streamsApp.inputTopics, namingStrategy));
 
-            //add prefix ACLs for transaction ID
-            aclEntries.add( AclEntries.allowAnyHostPrefix(AclOperation.DESCRIBE, principal, qualifiedName, ResourceType.TRANSACTIONAL_ID));
-            aclEntries.add( AclEntries.allowAnyHostPrefix(AclOperation.WRITE, principal, qualifiedName, ResourceType.TRANSACTIONAL_ID));
 
+            if (streamsApp.prefixApplicationId) {
+                //add prefix ACLs for transaction ID
+                aclEntries.add(AclEntries.allowAnyHostPrefix(AclOperation.DESCRIBE, principal, qualifiedName, ResourceType.TRANSACTIONAL_ID));
+                aclEntries.add(AclEntries.allowAnyHostPrefix(AclOperation.WRITE, principal, qualifiedName, ResourceType.TRANSACTIONAL_ID));
+            } else {
+                aclEntries.add(AclEntries.allowAnyHostLiteral(AclOperation.DESCRIBE, principal, qualifiedName, ResourceType.TRANSACTIONAL_ID));
+                aclEntries.add(AclEntries.allowAnyHostLiteral(AclOperation.WRITE, principal, qualifiedName, ResourceType.TRANSACTIONAL_ID));
+            }
             //give prefixed rights for all internal topics. These will be generated with the applicationId as prefix
             final var internalTopicAcls = Stream.of(AclOperation.READ, AclOperation.DELETE, AclOperation.WRITE, AclOperation.CREATE)
                     .map(op -> AclEntries.allowAnyHostPrefix(op, principal, qualifiedName, ResourceType.TOPIC))

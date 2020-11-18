@@ -23,15 +23,18 @@ public class ExtensibleProjectAuthorizationStrategy<A> implements DomainCompiler
     private final ResourceStrategy<A, Consumer> consumerSubAclStrategy;
     private final ResourceStrategy<A, Producer> producerSubAclStrategy;
     private final ResourceStrategy<A, StreamsApp> streamsAppSubAclStrategy;
+    private final ResourceStrategy<A, Topic> foreignAccessStrategy;
 
     public ExtensibleProjectAuthorizationStrategy(
             ResourceStrategy<A, Consumer> consumerSubAclStrategy,
             ResourceStrategy<A, Producer> producerSubAclStrategy,
-            ResourceStrategy<A, StreamsApp> streamsAppSubAclStrategy
+            ResourceStrategy<A, StreamsApp> streamsAppSubAclStrategy,
+            ResourceStrategy<A, Topic> foreignAccessStrategy
     ) {
         this.consumerSubAclStrategy = consumerSubAclStrategy;
         this.producerSubAclStrategy = producerSubAclStrategy;
         this.streamsAppSubAclStrategy = streamsAppSubAclStrategy;
+        this.foreignAccessStrategy = foreignAccessStrategy;
     }
 
     /**
@@ -52,6 +55,9 @@ public class ExtensibleProjectAuthorizationStrategy<A> implements DomainCompiler
         ));
         project.streamsApps.forEach(streamsApp -> entries.addAll(
                 streamsAppSubAclStrategy.acls(streamsApp,  namingStrategy)
+        ));
+        project.topics.forEach(topic -> entries.addAll(
+                foreignAccessStrategy.acls(topic, namingStrategy)
         ));
         return entries;
     }
