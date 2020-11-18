@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 public class DataModel {
+
+    //TODO: add headers - see readme.md
+
     @JsonProperty("key")
     public final TypeInformation key;
 

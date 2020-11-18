@@ -125,7 +125,8 @@ todo: add it!
 
 ### Which ACLs do I need and which ones will be created
 
-```
+```yaml
+---
 projects:
   - name: sample-project
     consumers:
@@ -162,9 +163,32 @@ projects:
 
     topics:
       - name: testTopic
-        consumers: 
-        - [list of users getting access to this topic, 
+        consumerPrincipals: 
+        - [list of users getting read access to this topic, 
             especially useful for wildcard 'User:*']
-
+        producerPrincipals:
+        - [list of users getting read access to this topic, 
+                      especially useful for wildcard 'User:*']
 ```
-The topic and group names will be prefixed by the 
+The topic and group names will be prefixed by the domain and project name.
+
+Each consumer and producer defined in the project will get READ/WRITE access to each topic specified in the project.
+
+Each `topic` can specify the following fields:
+
+- `name` (required): will be concatenated with the domain and project name to form the topic name in the 
+Kafka cluster.
+- `configs`: a map which contains the topic configuration. Possible fields include:
+    - `replication.factor`
+    - `num.partitions`
+    - any topic level config from https://docs.confluent.io/current/installation/configuration/topic-configs.html
+- `dataModel`: a data model description as specified below.
+- `consumerPrincipals`: a list of additional principals which will be granted READ access to the topic.
+- `producerPrincipals`: a list of additional principals which will be granted WRITE access to the topic.
+
+All fields are optional unless they are marked as required.
+
+The `DataModel` of a topic has the following fields:
+- `key`: TODO
+- `value`: TODO
+- `headers`: TODO

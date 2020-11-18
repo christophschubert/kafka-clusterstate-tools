@@ -3,9 +3,11 @@ package net.christophschubert.kafka.clusterstate.formats.domain.compiler;
 import net.christophschubert.kafka.clusterstate.formats.domain.Consumer;
 import net.christophschubert.kafka.clusterstate.formats.domain.Producer;
 import net.christophschubert.kafka.clusterstate.formats.domain.StreamsApp;
+import net.christophschubert.kafka.clusterstate.formats.domain.Topic;
 import net.christophschubert.kafka.clusterstate.mds.*;
 import org.apache.kafka.common.resource.ResourceType;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -18,7 +20,8 @@ public class RbacStrategies {
         return new ExtensibleProjectAuthorizationStrategy<>(
                 new ConsumerRbacStrategy(scope),
                 new ProducerRbacStrategy(scope),
-                new StreamsRbacStrategy(scope)
+                new StreamsRbacStrategy(scope),
+                new ForeignAccessRbacStrategy(scope)
         );
     }
 
@@ -120,6 +123,21 @@ public class RbacStrategies {
                     namingStrategy.name(streamsApp), PREFIXED))));
 
             return bindings;
+        }
+    }
+
+    static class ForeignAccessRbacStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<RbacBindingInScope, Topic> {
+
+        private final Scope scope;
+
+        public ForeignAccessRbacStrategy(Scope scope) {
+            this.scope = scope;
+        }
+
+        @Override
+        public Set<RbacBindingInScope> acls(Topic resource, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+            //TODO: implement properly
+            return Collections.emptySet();
         }
     }
 }

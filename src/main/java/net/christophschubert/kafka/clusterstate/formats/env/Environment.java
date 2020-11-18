@@ -10,13 +10,13 @@ import java.util.Set;
 public class Environment {
     @JsonCreator
     public Environment(
-            @JsonProperty("clusters") Set<Cluster> clusters
+            @JsonProperty("clusters") Set<CloudCluster> clusters
     ) {
         this.clusters = clusters;
     }
 
     @JsonProperty("clusters")
-    public final Set<Cluster> clusters;
+    public final Set<CloudCluster> clusters;
 
     @Override
     public boolean equals(Object o) {

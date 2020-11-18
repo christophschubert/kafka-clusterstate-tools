@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import net.christophschubert.kafka.clusterstate.formats.Helpers;
 
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
@@ -31,6 +32,13 @@ public class Producer extends ProjectSubResource {
         this.transactionId = transactionId;
         this.idempotent = idempotent;
         this.topics = Helpers.emptyForNull(topics);
+    }
+
+    public Producer(String principal) {
+        this.principal = principal;
+        this.transactionId = null;
+        this.idempotent = false;
+        this.topics = Collections.emptySet();
     }
 
     @Override

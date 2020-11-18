@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class Cluster {
+public class CloudCluster {
     @JsonProperty("type")
     public final String type;
 
@@ -46,11 +46,13 @@ public class Cluster {
     @JsonProperty("clientProperties")
     public final Map<String, Map<String, String>> clientProperties;
 
+    //TODO: add proper fields
+    String pathToClusterLevelPriviledges; // (1)
+    Set<String> pathstoDomainDescriptions; // (2)
+    // (1) + (2) => clusterstate, will be compared to state of physical cluster described in this class
 
-    String pathToClusterLevelPriviledges;
-    Set<String> pathstoDomainDescriptions;
     @JsonCreator
-    public Cluster(
+    public CloudCluster(
             @JsonProperty("type") String type,
             @JsonProperty("clusterId") String clusterId,
             @JsonProperty("clusterType") String clusterType,
@@ -81,8 +83,8 @@ public class Cluster {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Cluster)) return false;
-        Cluster cluster = (Cluster) o;
+        if (!(o instanceof CloudCluster)) return false;
+        CloudCluster cluster = (CloudCluster) o;
         return Objects.equals(type, cluster.type) &&
                 Objects.equals(clusterId, cluster.clusterId) &&
                 Objects.equals(clusterType, cluster.clusterType) &&
@@ -104,7 +106,7 @@ public class Cluster {
 
     @Override
     public String toString() {
-        return "Cluster{" +
+        return "CloudCluster{" +
                 "type='" + type + '\'' +
                 ", clusterId='" + clusterId + '\'' +
                 ", clusterType='" + clusterType + '\'' +

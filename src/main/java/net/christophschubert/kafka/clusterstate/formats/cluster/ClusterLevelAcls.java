@@ -3,11 +3,11 @@ package net.christophschubert.kafka.clusterstate.formats.cluster;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.swing.table.TableCellEditor;
+import java.util.Objects;
 import java.util.Set;
 import static net.christophschubert.kafka.clusterstate.formats.Helpers.emptyForNull;
 
-public class KafkaCluster {
+public class ClusterLevelAcls {
     //entries for cluster-scoped ACLs
     @JsonProperty("alterPrincipals")
     public final Set<String> alterPrincipals;
@@ -21,6 +21,9 @@ public class KafkaCluster {
     @JsonProperty("createPrincipals")
     public final Set<String> createPrincipals;
 
+    @JsonProperty("deletePrincipals")
+    public final Set<String> deletePrincipals;
+
     @JsonProperty("describePrincipals")
     public final Set<String> describePrincipals;
 
@@ -31,11 +34,12 @@ public class KafkaCluster {
     public final Set<String> idempotentWritePrincipals;
 
     @JsonCreator
-    public KafkaCluster(
+    public ClusterLevelAcls(
             @JsonProperty("alterPrincipals") Set<String> alterPrincipals,
             @JsonProperty("alterConfigsPrincipals") Set<String> alterConfigsPrincipals,
             @JsonProperty("clusterActionPrincipals")Set<String> clusterActionPrincipals,
             @JsonProperty("createPrincipals") Set<String> createPrincipals,
+            @JsonProperty("deletePrincipals") Set<String> deletePrincipals,
             @JsonProperty("describePrincipals") Set<String> describePrincipals,
             @JsonProperty("describeConfigsPrincipals") Set<String> describeConfigsPrincipals,
             @JsonProperty("idempotentWritePrincipals") Set<String> idempotentWritePrincipals
@@ -44,9 +48,44 @@ public class KafkaCluster {
         this.alterConfigsPrincipals = emptyForNull(alterConfigsPrincipals);
         this.clusterActionPrincipals = emptyForNull(clusterActionPrincipals);
         this.createPrincipals = emptyForNull(createPrincipals);
+        this.deletePrincipals = emptyForNull(deletePrincipals);
         this.describePrincipals = emptyForNull(describePrincipals);
         this.describeConfigsPrincipals = emptyForNull(describeConfigsPrincipals);
         this.idempotentWritePrincipals = emptyForNull(idempotentWritePrincipals);
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ClusterLevelAcls)) return false;
+        ClusterLevelAcls that = (ClusterLevelAcls) o;
+        return Objects.equals(alterPrincipals, that.alterPrincipals) &&
+                Objects.equals(alterConfigsPrincipals, that.alterConfigsPrincipals) &&
+                Objects.equals(clusterActionPrincipals, that.clusterActionPrincipals) &&
+                Objects.equals(createPrincipals, that.createPrincipals) &&
+                Objects.equals(deletePrincipals, that.deletePrincipals) &&
+                Objects.equals(describePrincipals, that.describePrincipals) &&
+                Objects.equals(describeConfigsPrincipals, that.describeConfigsPrincipals) &&
+                Objects.equals(idempotentWritePrincipals, that.idempotentWritePrincipals);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(alterPrincipals, alterConfigsPrincipals, clusterActionPrincipals, createPrincipals, deletePrincipals, describePrincipals, describeConfigsPrincipals, idempotentWritePrincipals);
+    }
+
+    @Override
+    public String toString() {
+        return "ClusterLevelAcls{" +
+                "alterPrincipals=" + alterPrincipals +
+                ", alterConfigsPrincipals=" + alterConfigsPrincipals +
+                ", clusterActionPrincipals=" + clusterActionPrincipals +
+                ", createPrincipals=" + createPrincipals +
+                ", deletePrincipals=" + deletePrincipals +
+                ", describePrincipals=" + describePrincipals +
+                ", describeConfigsPrincipals=" + describeConfigsPrincipals +
+                ", idempotentWritePrincipals=" + idempotentWritePrincipals +
+                '}';
+    }
 }

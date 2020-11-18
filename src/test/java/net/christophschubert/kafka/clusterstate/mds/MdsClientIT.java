@@ -33,7 +33,7 @@ public class MdsClientIT {
 
         // only 1 cluster => metadata cluster = Kafka cluster!
         final String kafkaClusterId = client.metadataClusterId();
-        System.out.println("Cluster Id: " + kafkaClusterId);
+        System.out.println("CloudCluster Id: " + kafkaClusterId);
         final FeaturesDescription features = client.features();
         printFeatureSummary(features);
 
