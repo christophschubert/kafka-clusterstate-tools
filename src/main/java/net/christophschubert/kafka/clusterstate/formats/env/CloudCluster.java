@@ -51,6 +51,15 @@ public class CloudCluster {
     Set<String> pathstoDomainDescriptions; // (2)
     // (1) + (2) => clusterstate, will be compared to state of physical cluster described in this class
 
+    @JsonProperty("principals")
+    public final Map<String, String> principals;
+
+    @JsonProperty("domainFileFolder")
+    public final String domainFileFolder;
+
+    @JsonProperty("clusterLevelAccessFolder")
+    public final String clusterLevelAccessFolder;
+
     @JsonCreator
     public CloudCluster(
             @JsonProperty("type") String type,
@@ -64,7 +73,10 @@ public class CloudCluster {
             @JsonProperty("ownerContact") String ownerContact,
             @JsonProperty("org") String org,
             @JsonProperty("tags") Set<String> tags,
-            @JsonProperty("clientProperties") Map<String, Map<String, String>> clientProperties
+            @JsonProperty("clientProperties") Map<String, Map<String, String>> clientProperties,
+            @JsonProperty("principals") Map<String, String> principals,
+            @JsonProperty("domainFileFolder") String domainFileFolder,
+            @JsonProperty("clusterLevelAccessFolder") String clusterLevelAccessFolder
     ) {
         this.type = type;
         this.clusterId = clusterId;
@@ -78,30 +90,9 @@ public class CloudCluster {
         this.org = org;
         this.tags = Helpers.emptyForNull(tags);
         this.clientProperties = clientProperties == null ? Collections.emptyMap() : clientProperties;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CloudCluster)) return false;
-        CloudCluster cluster = (CloudCluster) o;
-        return Objects.equals(type, cluster.type) &&
-                Objects.equals(clusterId, cluster.clusterId) &&
-                Objects.equals(clusterType, cluster.clusterType) &&
-                Objects.equals(provider, cluster.provider) &&
-                Objects.equals(region, cluster.region) &&
-                Objects.equals(availability, cluster.availability) &&
-                Objects.equals(name, cluster.name) &&
-                Objects.equals(owner, cluster.owner) &&
-                Objects.equals(ownerContact, cluster.ownerContact) &&
-                Objects.equals(org, cluster.org) &&
-                Objects.equals(tags, cluster.tags) &&
-                Objects.equals(clientProperties, cluster.clientProperties);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(type, clusterId, clusterType, provider, region, availability, name, owner, ownerContact, org, tags, clientProperties);
+        this.principals = principals == null ? Collections.emptyMap() : principals;
+        this.domainFileFolder = domainFileFolder;
+        this.clusterLevelAccessFolder = clusterLevelAccessFolder;
     }
 
     @Override
@@ -119,6 +110,40 @@ public class CloudCluster {
                 ", org='" + org + '\'' +
                 ", tags=" + tags +
                 ", clientProperties=" + clientProperties +
+                ", pathToClusterLevelPriviledges='" + pathToClusterLevelPriviledges + '\'' +
+                ", pathstoDomainDescriptions=" + pathstoDomainDescriptions +
+                ", principals=" + principals +
+                ", domainFileFolder='" + domainFileFolder + '\'' +
+                ", clusterLevelAccessFolder='" + clusterLevelAccessFolder + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CloudCluster)) return false;
+        CloudCluster that = (CloudCluster) o;
+        return Objects.equals(type, that.type) &&
+                Objects.equals(clusterId, that.clusterId) &&
+                Objects.equals(clusterType, that.clusterType) &&
+                Objects.equals(provider, that.provider) &&
+                Objects.equals(region, that.region) &&
+                Objects.equals(availability, that.availability) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(owner, that.owner) &&
+                Objects.equals(ownerContact, that.ownerContact) &&
+                Objects.equals(org, that.org) &&
+                Objects.equals(tags, that.tags) &&
+                Objects.equals(clientProperties, that.clientProperties) &&
+                Objects.equals(pathToClusterLevelPriviledges, that.pathToClusterLevelPriviledges) &&
+                Objects.equals(pathstoDomainDescriptions, that.pathstoDomainDescriptions) &&
+                Objects.equals(principals, that.principals) &&
+                Objects.equals(domainFileFolder, that.domainFileFolder) &&
+                Objects.equals(clusterLevelAccessFolder, that.clusterLevelAccessFolder);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, clusterId, clusterType, provider, region, availability, name, owner, ownerContact, org, tags, clientProperties, pathToClusterLevelPriviledges, pathstoDomainDescriptions, principals, domainFileFolder, clusterLevelAccessFolder);
     }
 }
