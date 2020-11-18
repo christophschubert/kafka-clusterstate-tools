@@ -36,6 +36,8 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
+    compile group: 'org.apache.commons', name: 'commons-text', version: '1.9'
+
     compile group: 'info.picocli', name: 'picocli', version: '4.5.1'
 
     compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.30'
