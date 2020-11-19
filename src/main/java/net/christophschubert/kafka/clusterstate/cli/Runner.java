@@ -135,6 +135,7 @@ public class Runner {
         logger.info("applying " + clusterLevelAccessPath + " to " + properties.get("bootstrap.server"));
         final var clusterLevelState = currentState.filterClusterLevel();
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        System.out.println(clusterLevelAccessPath);
         final var clusterLevelPrivileges = mapper.readValue(clusterLevelAccessPath, ClusterLevelPrivileges.class);
 
         final var compiler = new DefaultCompiler();

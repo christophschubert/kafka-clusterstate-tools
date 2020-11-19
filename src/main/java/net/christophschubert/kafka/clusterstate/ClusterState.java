@@ -79,6 +79,7 @@ public class ClusterState {
         return new Builder(this)
                 .withAclEntries(Sets.filter(this.aclEntries, entry -> entry.resourceType == ResourceType.CLUSTER))
                 .withRoleBindingsEntries(Sets.filter(this.roleBindings, RbacBindingInScope::isClusterLevel))
+                .withTopicDescriptions(Collections.emptyMap())
                 .build();
     }
 
