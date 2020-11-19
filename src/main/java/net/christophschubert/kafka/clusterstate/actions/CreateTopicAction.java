@@ -40,4 +40,11 @@ public class CreateTopicAction implements Action {
         // necessary when we use configs.
         return Collections.singleton(newTopic);
     }
+
+    @Override
+    public String toString() {
+        return "CreateTopicAction{" +
+                "topic=" + topic +
+                '}';
+    }
 }
