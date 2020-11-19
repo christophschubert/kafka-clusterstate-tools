@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import net.christophschubert.kafka.clusterstate.formats.Helpers;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * Model class for a cluster in Confluent Cloud.
+ */
 public class CloudCluster {
     @JsonProperty("type")
     public final String type;
@@ -45,11 +47,6 @@ public class CloudCluster {
 
     @JsonProperty("clientProperties")
     public final Map<String, Map<String, String>> clientProperties;
-
-    //TODO: add proper fields
-    String pathToClusterLevelPriviledges; // (1)
-    Set<String> pathstoDomainDescriptions; // (2)
-    // (1) + (2) => clusterstate, will be compared to state of physical cluster described in this class
 
     @JsonProperty("principals")
     public final Map<String, String> principals;
@@ -89,8 +86,8 @@ public class CloudCluster {
         this.ownerContact = ownerContact;
         this.org = org;
         this.tags = Helpers.emptyForNull(tags);
-        this.clientProperties = clientProperties == null ? Collections.emptyMap() : clientProperties;
-        this.principals = principals == null ? Collections.emptyMap() : principals;
+        this.clientProperties = Helpers.emptyForNull(clientProperties);
+        this.principals = Helpers.emptyForNull(principals);
         this.domainFileFolder = domainFileFolder;
         this.clusterLevelAccessFolder = clusterLevelAccessFolder;
     }
@@ -110,8 +107,6 @@ public class CloudCluster {
                 ", org='" + org + '\'' +
                 ", tags=" + tags +
                 ", clientProperties=" + clientProperties +
-                ", pathToClusterLevelPriviledges='" + pathToClusterLevelPriviledges + '\'' +
-                ", pathstoDomainDescriptions=" + pathstoDomainDescriptions +
                 ", principals=" + principals +
                 ", domainFileFolder='" + domainFileFolder + '\'' +
                 ", clusterLevelAccessFolder='" + clusterLevelAccessFolder + '\'' +
@@ -135,8 +130,6 @@ public class CloudCluster {
                 Objects.equals(org, that.org) &&
                 Objects.equals(tags, that.tags) &&
                 Objects.equals(clientProperties, that.clientProperties) &&
-                Objects.equals(pathToClusterLevelPriviledges, that.pathToClusterLevelPriviledges) &&
-                Objects.equals(pathstoDomainDescriptions, that.pathstoDomainDescriptions) &&
                 Objects.equals(principals, that.principals) &&
                 Objects.equals(domainFileFolder, that.domainFileFolder) &&
                 Objects.equals(clusterLevelAccessFolder, that.clusterLevelAccessFolder);
@@ -144,6 +137,6 @@ public class CloudCluster {
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, clusterId, clusterType, provider, region, availability, name, owner, ownerContact, org, tags, clientProperties, pathToClusterLevelPriviledges, pathstoDomainDescriptions, principals, domainFileFolder, clusterLevelAccessFolder);
+        return Objects.hash(type, clusterId, clusterType, provider, region, availability, name, owner, ownerContact, org, tags, clientProperties, principals, domainFileFolder, clusterLevelAccessFolder);
     }
 }
