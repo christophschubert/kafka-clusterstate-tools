@@ -2,6 +2,7 @@ package net.christophschubert.kafka.clusterstate.formats.cluster;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kafka.common.acl.AclOperation;
 
 import java.util.Objects;
 import java.util.Set;
@@ -21,9 +22,6 @@ public class ClusterLevelAcls {
     @JsonProperty("createPrincipals")
     public final Set<String> createPrincipals;
 
-    @JsonProperty("deletePrincipals")
-    public final Set<String> deletePrincipals;
-
     @JsonProperty("describePrincipals")
     public final Set<String> describePrincipals;
 
@@ -39,7 +37,6 @@ public class ClusterLevelAcls {
             @JsonProperty("alterConfigsPrincipals") Set<String> alterConfigsPrincipals,
             @JsonProperty("clusterActionPrincipals")Set<String> clusterActionPrincipals,
             @JsonProperty("createPrincipals") Set<String> createPrincipals,
-            @JsonProperty("deletePrincipals") Set<String> deletePrincipals,
             @JsonProperty("describePrincipals") Set<String> describePrincipals,
             @JsonProperty("describeConfigsPrincipals") Set<String> describeConfigsPrincipals,
             @JsonProperty("idempotentWritePrincipals") Set<String> idempotentWritePrincipals
@@ -48,12 +45,31 @@ public class ClusterLevelAcls {
         this.alterConfigsPrincipals = emptyForNull(alterConfigsPrincipals);
         this.clusterActionPrincipals = emptyForNull(clusterActionPrincipals);
         this.createPrincipals = emptyForNull(createPrincipals);
-        this.deletePrincipals = emptyForNull(deletePrincipals);
         this.describePrincipals = emptyForNull(describePrincipals);
         this.describeConfigsPrincipals = emptyForNull(describeConfigsPrincipals);
         this.idempotentWritePrincipals = emptyForNull(idempotentWritePrincipals);
     }
 
+    public Set<String> principalsForOperation(AclOperation operation) {
+        switch (operation) {
+            case ALTER:
+                return alterPrincipals;
+            case ALTER_CONFIGS:
+                return alterConfigsPrincipals;
+            case CLUSTER_ACTION:
+                return clusterActionPrincipals;
+            case CREATE:
+                return createPrincipals;
+            case DESCRIBE:
+                return describePrincipals;
+            case DESCRIBE_CONFIGS:
+                return describeConfigsPrincipals;
+            case IDEMPOTENT_WRITE:
+                return idempotentWritePrincipals;
+            default:
+                throw new UnsupportedOperationException("AclOperation " + operation + " is not a cluster-level operation");
+        }
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -64,7 +80,6 @@ public class ClusterLevelAcls {
                 Objects.equals(alterConfigsPrincipals, that.alterConfigsPrincipals) &&
                 Objects.equals(clusterActionPrincipals, that.clusterActionPrincipals) &&
                 Objects.equals(createPrincipals, that.createPrincipals) &&
-                Objects.equals(deletePrincipals, that.deletePrincipals) &&
                 Objects.equals(describePrincipals, that.describePrincipals) &&
                 Objects.equals(describeConfigsPrincipals, that.describeConfigsPrincipals) &&
                 Objects.equals(idempotentWritePrincipals, that.idempotentWritePrincipals);
@@ -72,7 +87,7 @@ public class ClusterLevelAcls {
 
     @Override
     public int hashCode() {
-        return Objects.hash(alterPrincipals, alterConfigsPrincipals, clusterActionPrincipals, createPrincipals, deletePrincipals, describePrincipals, describeConfigsPrincipals, idempotentWritePrincipals);
+        return Objects.hash(alterPrincipals, alterConfigsPrincipals, clusterActionPrincipals, createPrincipals, describePrincipals, describeConfigsPrincipals, idempotentWritePrincipals);
     }
 
     @Override
@@ -82,7 +97,6 @@ public class ClusterLevelAcls {
                 ", alterConfigsPrincipals=" + alterConfigsPrincipals +
                 ", clusterActionPrincipals=" + clusterActionPrincipals +
                 ", createPrincipals=" + createPrincipals +
-                ", deletePrincipals=" + deletePrincipals +
                 ", describePrincipals=" + describePrincipals +
                 ", describeConfigsPrincipals=" + describeConfigsPrincipals +
                 ", idempotentWritePrincipals=" + idempotentWritePrincipals +
