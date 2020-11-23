@@ -12,14 +12,18 @@ public class SerializationInfo {
     @JsonProperty("schemaFile")
     public final String schemaFile;
 
+    @JsonProperty("subjectStrategy")
+    public final SubjectNameStrategyName subjectStrategy;
 
     @JsonCreator
     public SerializationInfo(
             @JsonProperty("type") String type,
-            @JsonProperty("schemaFile") String schemaFile
+            @JsonProperty("schemaFile") String schemaFile,
+            @JsonProperty("subjectStrategy") SubjectNameStrategyName subjectStrategy
     ) {
         this.type = type;
         this.schemaFile = schemaFile;
+        this.subjectStrategy = subjectStrategy;
     }
 
     @Override

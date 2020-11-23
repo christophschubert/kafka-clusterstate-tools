@@ -1,20 +1,9 @@
 package net.christophschubert.kafka.clusterstate.formats.domain;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationConfig;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.DefaultDeserializationContext;
-import com.fasterxml.jackson.databind.deser.DeserializerFactory;
-import com.fasterxml.jackson.databind.introspect.AnnotationCollector;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import nonapi.io.github.classgraph.json.JSONUtils;
+import net.christophschubert.kafka.clusterstate.SubjectNameStrategyName;
 import org.junit.Test;
 
-import javax.crypto.spec.PSource;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -64,8 +53,13 @@ public class DomainParserTest {
     }
 
     @Test
-    public void additionalFieldsAreSkipped() {
-        //TODO: implement
+    public void additionalFieldsAreSkipped() throws JsonProcessingException {
+        final var raw = "---\n" +
+                "name: test\n" +
+                "newMetaDataField: somevalue\n" +
+                "projects:";
+        final Domain domain = new DomainParser().deserialize(raw, DomainParser.Format.YAML, "basePath");
+        assertEquals(new Domain("test", null), domain);
     }
 
     @Test
@@ -81,19 +75,62 @@ public class DomainParserTest {
                 "        type: String\n" +
                 "      value:\n" +
                 "        type: Avro\n" +
-                "        schemaFile: \"schemas/test.avsc\"\n";
+                "        schemaFile: schemas/test.avsc";
 
         final Domain domain = new DomainParser().deserialize(raw, DomainParser.Format.YAML, "basePath");
         assertEquals("basePath/schemas/test.avsc",
                 domain.projects.iterator().next().topics.iterator().next().dataModel.value.schemaFile);
     }
 
-
     @Test
-    public void dddd() throws IOException {
-        final DomainParser parser = new DomainParser();
-        final var examples = parser.loadFromFile(Path.of("examples", "simple-context", "pro2.domy").toFile());
-        System.out.println(examples);
+    public void topicIsDefaultSubjectNameStrategy() throws JsonProcessingException {
+        final var raw = "---\n" +
+                "name: test\n" +
+                "projects:\n" +
+                "- name: helloproj\n" +
+                "  topics:\n" +
+                "  - name: topicB\n" +
+                "    dataModel:\n" +
+                "      key:\n" +
+                "        type: String\n" +
+                "      value:\n" +
+                "        type: Avro\n" +
+                "        schemaFile: \"schemas/test.avsc\"\n";
+
+        final Domain domain = new DomainParser().deserialize(raw, DomainParser.Format.YAML, "basePath");
+        final var dataModel = domain.projects.iterator().next().topics.iterator().next().dataModel;
+
+        assertEquals(
+                new DataModel(new TypeInformation("String", null, null),
+                        new TypeInformation("Avro", "basePath/schemas/test.avsc", SubjectNameStrategyName.TOPIC)
+                ), dataModel
+        );
     }
 
+    @Test
+    public void subjectNameTest () throws JsonProcessingException {
+        final String inputWithSchemas = "---\n" +
+                "name: test\n" +
+                "projects:\n" +
+                "- name: helloproj\n" +
+                "  topics:\n" +
+                "    - name: topicA\n" +
+                "      dataModel:\n" +
+                "        key:\n" +
+                "          type: Protobuf\n" +
+                "          schemaFile: schemas/key.proto\n" +
+                "          subjectNaming: record\n" +
+                "        value:\n" +
+                "          type: Avro\n" +
+                "          schemaFile: schemas/test.avsc\n" +
+                "          subjectNaming: topicrecord";
+
+        DomainParser parser = new DomainParser();
+        final var domain = parser.deserialize(inputWithSchemas, DomainParser.Format.YAML, "basePath");
+        final var dataModel = domain.projects.iterator().next().topics.iterator().next().dataModel;
+        assertEquals(new DataModel(
+                new TypeInformation("Protobuf", "basePath/schemas/key.proto", SubjectNameStrategyName.RECORD),
+                new TypeInformation("Avro", "basePath/schemas/test.avsc", SubjectNameStrategyName.TOPICRECORD))
+                , dataModel);
+    }
 }
