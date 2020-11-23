@@ -51,7 +51,7 @@ class CLI {
             stateTransforms.add(cs -> cs.mapPrincipals(principalMap));
         }
 
-        final Runner runner = new Runner(contextPath, new File(contextPath, "cluster.yaml"), properties, stateTransforms);
+        final Runner runner = new Runner(List.of(contextPath), new File(contextPath, "cluster.yaml"), properties, stateTransforms);
         runner.run();
 
         return 0;
@@ -69,11 +69,13 @@ class CLI {
             @Option(names = { "-f", "--file" }, paramLabel = "STATEFILE", description = "filename to store state") File stateFile
     ) throws IOException, ExecutionException, InterruptedException {
         Properties properties = CLITools.loadProperties(configFile, bootstrapServer, envVarPrefix);
+
+        //TODO:
+        // remove for production usage: may contain secrets
         logger.info(properties.toString());
 
-        final ClientBundle bundle = ClientBundle.fromProperties(properties, new File("."));
+        final ClientBundle bundle = ClientBundle.fromProperties(properties);
         final ClusterState clusterState = ClusterStateManager.build(bundle);
-
 
         final ObjectMapper mapper = new ObjectMapper();
         mapper.writer().writeValue(stateFile, clusterState);

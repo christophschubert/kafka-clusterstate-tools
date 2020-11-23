@@ -51,11 +51,11 @@ public class CloudCluster {
     @JsonProperty("principals")
     public final Map<String, String> principals;
 
-    @JsonProperty("domainFileFolder")
-    public final String domainFileFolder;
+    @JsonProperty("domainFileFolders")
+    public final Set<String> domainFileFolders;
 
-    @JsonProperty("clusterLevelAccessFolder")
-    public final String clusterLevelAccessFolder;
+    @JsonProperty("clusterLevelAccessPath")
+    public final String clusterLevelAccessPath;
 
     @JsonCreator
     public CloudCluster(
@@ -72,8 +72,8 @@ public class CloudCluster {
             @JsonProperty("tags") Set<String> tags,
             @JsonProperty("clientProperties") Map<String, Map<String, String>> clientProperties,
             @JsonProperty("principals") Map<String, String> principals,
-            @JsonProperty("domainFileFolder") String domainFileFolder,
-            @JsonProperty("clusterLevelAccessFolder") String clusterLevelAccessFolder
+            @JsonProperty("domainFileFolders") Set<String> domainFileFolders,
+            @JsonProperty("clusterLevelAccessPath") String clusterLevelAccessPath
     ) {
         this.type = type;
         this.clusterId = clusterId;
@@ -88,8 +88,8 @@ public class CloudCluster {
         this.tags = Helpers.emptyForNull(tags);
         this.clientProperties = Helpers.emptyForNull(clientProperties);
         this.principals = Helpers.emptyForNull(principals);
-        this.domainFileFolder = domainFileFolder;
-        this.clusterLevelAccessFolder = clusterLevelAccessFolder;
+        this.domainFileFolders = domainFileFolders;
+        this.clusterLevelAccessPath = clusterLevelAccessPath;
     }
 
     @Override
@@ -108,8 +108,8 @@ public class CloudCluster {
                 ", tags=" + tags +
                 ", clientProperties=" + clientProperties +
                 ", principals=" + principals +
-                ", domainFileFolder='" + domainFileFolder + '\'' +
-                ", clusterLevelAccessFolder='" + clusterLevelAccessFolder + '\'' +
+                ", domainFileFolder='" + domainFileFolders + '\'' +
+                ", clusterLevelAccessFolder='" + clusterLevelAccessPath + '\'' +
                 '}';
     }
 
@@ -131,12 +131,12 @@ public class CloudCluster {
                 Objects.equals(tags, that.tags) &&
                 Objects.equals(clientProperties, that.clientProperties) &&
                 Objects.equals(principals, that.principals) &&
-                Objects.equals(domainFileFolder, that.domainFileFolder) &&
-                Objects.equals(clusterLevelAccessFolder, that.clusterLevelAccessFolder);
+                Objects.equals(domainFileFolders, that.domainFileFolders) &&
+                Objects.equals(clusterLevelAccessPath, that.clusterLevelAccessPath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, clusterId, clusterType, provider, region, availability, name, owner, ownerContact, org, tags, clientProperties, principals, domainFileFolder, clusterLevelAccessFolder);
+        return Objects.hash(type, clusterId, clusterType, provider, region, availability, name, owner, ownerContact, org, tags, clientProperties, principals, domainFileFolders, clusterLevelAccessPath);
     }
 }

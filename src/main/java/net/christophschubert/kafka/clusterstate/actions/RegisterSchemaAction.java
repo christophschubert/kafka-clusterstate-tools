@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
 
@@ -44,9 +43,7 @@ public class RegisterSchemaAction implements Action {
     @Override
     public boolean runRaw(ClientBundle bundle) {
         final var schemaRegistryClient = bundle.schemaRegistryClient;
-        final var basePath = bundle.context.getAbsolutePath();
-
-        final var path = Paths.get(basePath, serializationInfo.schemaFile);
+        final var path = Path.of(serializationInfo.schemaFile);
         final var subject = topicName + tagToSuffix.get(keyOrValue);
 
         try {

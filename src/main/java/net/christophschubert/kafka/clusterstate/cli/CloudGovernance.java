@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @CommandLine.Command(name= "cloudgovernance", subcommands = { CommandLine.HelpCommand.class }, version = "0.1.0",
         description = "Manage metadata of Confluent Cloud clusters.")
@@ -80,16 +81,14 @@ public class CloudGovernance {
         final var clientProps = new Properties();
         clientProps.putAll(MapTools.mapValues(CLITools.getClientProps(cluster), substitutor::replace));
 
-        //TODO: remove before prod: leaks secrets!
-        logger.info("cluster properties" + clientProps);
-
-
         //build principal mapping
         final List<Function<ClusterState, ClusterState>> stateTransforms = Collections.singletonList(cs -> cs.mapPrincipals(cluster.principals));
 
-
         try {
-            final Runner runner = new Runner(new File(cluster.domainFileFolder), new File(cluster.clusterLevelAccessFolder), clientProps, stateTransforms);
+            //todo: fix this
+            final var folders = cluster.domainFileFolders.stream().map(File::new).collect(Collectors.toList());
+            final Runner runner = new Runner(folders, new File(cluster.clusterLevelAccessPath
+            ), clientProps, stateTransforms);
             runner.run();
         } catch (IOException e) {
             e.printStackTrace();

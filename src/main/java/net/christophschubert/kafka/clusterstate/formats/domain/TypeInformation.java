@@ -2,8 +2,10 @@ package net.christophschubert.kafka.clusterstate.formats.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.Objects;
+
 
 public class TypeInformation {
     @JsonProperty("type")

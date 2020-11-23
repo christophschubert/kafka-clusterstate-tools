@@ -19,7 +19,7 @@ import java.util.*;
 public class PropertyFileBuilder {
     @CommandLine.Command(name = "build", description = "Apply domain description from context to a cluster")
     int build (
-            @CommandLine.Parameters(paramLabel = "environment", description = "path to the context") File environmentPath,
+            @CommandLine.Parameters(paramLabel = "environment", description = "path to env file") File environmentPath,
             @CommandLine.Parameters(paramLabel = "cluster") String clusterName
     ) {
         final var objectMapper = new ObjectMapper(new YAMLFactory());

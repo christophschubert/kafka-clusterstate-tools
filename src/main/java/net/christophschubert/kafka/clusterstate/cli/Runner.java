@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 public class Runner {
     private Logger logger = LoggerFactory.getLogger(Runner.class);
 
-    private final File domainContextPath;
+    private final List<File> domainContextPaths;
     private final File clusterLevelAccessPath;
     private final Properties properties;
     private final List<Function<ClusterState, ClusterState>> stateTransforms;
@@ -44,15 +44,12 @@ public class Runner {
     private final ClusterState currentState;
     private final ClusterStateManager clusterStateManager;
 
-    // current implementation expects
-    // - the domainContextPath to be a folder,
-    // - clusterLevelAccessPath to be a file
-    public Runner(File domainContextPath, File clusterLevelAccessPath, Properties properties, List<Function<ClusterState, ClusterState>> stateTransforms) throws ExecutionException, InterruptedException {
-        this.domainContextPath = domainContextPath;
+    public Runner(List<File> domainContextPaths, File clusterLevelAccessPath, Properties properties, List<Function<ClusterState, ClusterState>> stateTransforms) throws ExecutionException, InterruptedException {
+        this.domainContextPaths = domainContextPaths;
         this.clusterLevelAccessPath = clusterLevelAccessPath;
         this.properties = properties;
         this.stateTransforms = stateTransforms;
-        bundle = ClientBundle.fromProperties(properties, domainContextPath);
+        bundle = ClientBundle.fromProperties(properties);
         currentState = ClusterStateManager.build(bundle);
         clusterStateManager = new ClusterStateManager();
     }
@@ -66,7 +63,16 @@ public class Runner {
     void applyDomainChanges() throws IOException, InterruptedException {
         final DomainParser parser = new DomainParser();
 
-        final List<Domain> domains = Files.list(domainContextPath.toPath())
+        final List<Domain> domains = domainContextPaths.stream()
+                .flatMap(file -> {
+                    try {
+                        return Files.list(file.toPath());
+                    } catch (IOException e) {
+                        logger.error("Could not open or parse domain file " + file , e);
+                        System.exit(1);
+                    }
+                    return Stream.empty();
+                })
                 .filter(CLITools::isDomainFile)
                 .flatMap(path -> {
                     try {
@@ -126,9 +132,6 @@ public class Runner {
                 }
             });
         });
-
-        //TODO: implement filterByPrefix properly on ClusterState
-        //TODO: check status of the TODO above
     }
 
     public void applyClusterChanges() throws IOException {
