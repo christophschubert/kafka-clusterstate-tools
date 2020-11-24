@@ -31,6 +31,29 @@ repositories {
 
 }
 
+sourceSets {
+    intTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    intTestImplementation.extendsFrom implementation
+    intTestRuntimeOnly.extendsFrom runtimeOnly
+}
+
+task integrationTest(type: Test) {
+    description = "Runs integration tests"
+    group = 'verification'
+
+    testClassesDirs = sourceSets.intTest.output.classesDirs
+    classpath = sourceSets.intTest.runtimeClasspath
+    shouldRunAfter test
+}
+
+check.dependsOn integrationTest
+
 dependencies {
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
@@ -47,6 +70,10 @@ dependencies {
     compile group: 'io.confluent', name: 'kafka-protobuf-serializer', version: '6.0.0'
     compile group: 'io.confluent', name: 'kafka-json-schema-serializer', version: '6.0.0'
 
+    testCompile group: 'org.apache.kafka', name: 'kafka-streams', version: '2.6.0', classifier: 'test'
+
+
+
 
     compile group: 'org.apache.kafka', name: 'kafka-clients', version: '2.6.0'
     testCompile group: 'org.apache.kafka', name: 'kafka-clients', version: '2.6.0'
@@ -54,5 +81,9 @@ dependencies {
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.3'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.10.3'
     compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.10.3'
+
+    intTestImplementation "org.testcontainers:testcontainers:1.15.0"
+    intTestImplementation "org.testcontainers:kafka:1.15.0"
+    intTestImplementation group: 'junit', name: 'junit', version: '4.12'
 
 }
