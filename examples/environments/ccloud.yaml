@@ -1,6 +1,26 @@
 #########################################################################################
 # This file describes three Confluent Platform environments, used for our demo scenario.
 #
+
+#-------------------------------------------
+# for each cluster we need the following environment variables to fill in the client properties for the tool:
+#-------------------------------------------
+#    KST_CLUSTER_API_SECRET_cluster_AO
+#    KST_SR_API_SECRET_cluster_AO
+#    KST_CLUSTER_API_KEY_cluster_AO
+#    KST_SR_API_KEY_cluster_AO
+#-------------------------------------------
+
+#-------------------------------------------
+# for each cluster - service accont pair we need the following environment variables to fill in
+# the client properties for the client application:
+#-------------------------------------------
+#    KST_CLUSTER_API_SECRET___CLUSTER___PRINCIPAL
+#    KST_SR_API_SECRET___CLUSTER___PRINCIPAL
+#    KST_CLUSTER_API_KEY___CLUSTER___PRINCIPAL
+#    KST_SR_API_KEY___CLUSTER___PRINCIPAL
+#-------------------------------------------
+
 clusters:
   - name: cluster_AO # from, e.g., the Web UI
     type: developer-sandbox #dev/QA/prod, defines the 'environment'
