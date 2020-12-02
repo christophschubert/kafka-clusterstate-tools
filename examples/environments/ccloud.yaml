@@ -42,8 +42,8 @@ clusters:
       - open
 
     principals:
-      ao.socketserver.principal.prod.env: USER:1234
-      ao.socketserver.principal.cons.env: USER:5678
+      socketserver.principal.prod.env: USER:1234
+      socketserver.principal.cons.env: USER:5678
 
     domainFileFolder: instances/domains
 

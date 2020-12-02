@@ -39,19 +39,6 @@ public class CloudGovernance {
         return 0;
     }
 
-    Map<String, String> extractEnvVars(String clusterName, Map<String, String> envVars) {
-        final String kstEnvVarPrefix = "KST";
-        final var varKeys = List.of("CLUSTER_API_KEY", "CLUSTER_API_SECRET", "SR_API_KEY", "SR_API_SECRET");
-
-        final Map<String, String> res = new HashMap<>();
-        varKeys.forEach(key -> {
-            final var envVarName = kstEnvVarPrefix + "_" + key + "_" + clusterName;
-            res.put(key, envVars.get(envVarName));
-        });
-        return res;
-    }
-
-
     /**
      * The following entries from the envVars-map will used for substitutions:
      *  KST_CLUSTER_API_SECRET_<clusterName>
@@ -64,8 +51,7 @@ public class CloudGovernance {
      */
     void applyCluster(CloudCluster cluster, Map<String, String> envVars) {
 
-        final var substitutions = extractEnvVars(cluster.name, envVars);
-
+        final var substitutions = EnvVarTools.extractEnvVars(cluster.name, envVars);
 
         /*
         env vars to create to
@@ -76,7 +62,6 @@ public class CloudGovernance {
          */
 
         final StringSubstitutor substitutor = new StringSubstitutor(substitutions);
-
 
         final var clientProps = new Properties();
         clientProps.putAll(MapTools.mapValues(CLITools.getClientProps(cluster), substitutor::replace));
