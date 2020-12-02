@@ -7,7 +7,6 @@ import org.apache.kafka.common.acl.AclOperation;
 import org.apache.kafka.common.resource.ResourceType;
 import org.junit.Test;
 
-import java.util.Collections;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -17,22 +16,35 @@ public class DefaultCompilerTest {
     @Test
     public void compilerTest() {
         final ClusterLevelPrivileges privileges = new ClusterLevelPrivileges(
-                new ClusterLevelAcls(Set.of("alterPrin:1", "alterPrin:2"),
-                        Collections.emptySet(),
-                        Collections.emptySet(),
-                        Collections.emptySet(),
-                        Collections.emptySet(),
-                        Collections.emptySet(),
-                        Collections.emptySet(),
-                        Set.of("idempotent:1")
-                        )
+                new ClusterLevelAcls(
+                        Set.of("alter:1", "alter:2"),
+                        Set.of("alterConfig:1"),
+                        Set.of("clusterAction:1"),
+                        Set.of("create:1"),
+                        Set.of("describe:1", "describe:2"),
+                        Set.of("describeConfig:1"),
+                        Set.of("idempotentWrite:1")
+                )
         );
 
         DefaultCompiler compiler = new DefaultCompiler();
 
         final var aclEntries = compiler.compile(privileges).aclEntries;
 
-        assertTrue(aclEntries.contains(AclEntries.allowAnyHostLiteral(AclOperation.IDEMPOTENT_WRITE, "idempotent:1", "", ResourceType.CLUSTER)));
-        assertEquals(3, aclEntries.size());
+        assertEquals(9, aclEntries.size());
+        assertTrue(aclEntries.contains(AclEntries.allowAnyHostLiteral(AclOperation.ALTER, "alter:1", "", ResourceType.CLUSTER)));
+        assertTrue(aclEntries.contains(AclEntries.allowAnyHostLiteral(AclOperation.ALTER, "alter:2", "", ResourceType.CLUSTER)));
+        assertTrue(aclEntries.contains(AclEntries.allowAnyHostLiteral(AclOperation.ALTER_CONFIGS, "alterConfig:1", "", ResourceType.CLUSTER)));
+        assertTrue(aclEntries.contains(AclEntries.allowAnyHostLiteral(AclOperation.CLUSTER_ACTION, "clusterAction:1", "", ResourceType.CLUSTER)));
+        assertTrue(aclEntries.contains(AclEntries.allowAnyHostLiteral(AclOperation.CREATE, "create:1", "", ResourceType.CLUSTER)));
+        assertTrue(aclEntries.contains(AclEntries.allowAnyHostLiteral(AclOperation.DESCRIBE, "describe:1", "", ResourceType.CLUSTER)));
+        assertTrue(aclEntries.contains(AclEntries.allowAnyHostLiteral(AclOperation.DESCRIBE, "describe:2", "", ResourceType.CLUSTER)));
+        assertTrue(aclEntries.contains(AclEntries.allowAnyHostLiteral(AclOperation.DESCRIBE_CONFIGS, "describeConfig:1", "", ResourceType.CLUSTER)));
+        assertTrue(aclEntries.contains(AclEntries.allowAnyHostLiteral(AclOperation.IDEMPOTENT_WRITE, "idempotentWrite:1", "", ResourceType.CLUSTER)));
+    }
+
+    @Test
+    public void rightNumberOfClusterLevelAcls() {
+        assertEquals(7, DefaultCompiler.clusterLevelOperations.size());
     }
 }

@@ -13,6 +13,10 @@ projects:
         value:
           type: Avro
           schemaFile: "schemas/test.avsc"
+        headers:
+          - name:
+          - description:
+          - optional: true/false
   consumers:
     - principal: "User:xxx"
       groupId: "groupForApp"

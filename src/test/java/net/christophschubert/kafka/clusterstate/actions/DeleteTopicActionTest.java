@@ -33,7 +33,7 @@ public class DeleteTopicActionTest {
 
         addTopics(adminClient, Set.of(topicToDelete, remainingTopic));
 
-        ClientBundle bundle = new ClientBundle(adminClient, null, new MockSchemaRegistryClient(), new File("."));
+        ClientBundle bundle = new ClientBundle(adminClient, null, new MockSchemaRegistryClient());
 
         assertEquals(2, adminClient.listTopics().names().get().size());
 

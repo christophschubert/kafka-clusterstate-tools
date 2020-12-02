@@ -24,9 +24,9 @@ public class Domain {
     @JsonCreator
     public Domain(
             @JsonProperty("name") String name,
-            @JsonProperty("project") Set<Project> projects) {
+            @JsonProperty("projects") Set<Project> projects) {
         this.name = name;
-        this.projects = projects == null ? Collections.EMPTY_SET : projects;
+        this.projects = projects == null ? Collections.emptySet() : projects;
         updateChildren();
     }
 

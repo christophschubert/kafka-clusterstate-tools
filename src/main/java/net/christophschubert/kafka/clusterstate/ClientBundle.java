@@ -36,27 +36,24 @@ public class ClientBundle {
     public final Admin adminClient;
     public final SchemaRegistryClient schemaRegistryClient;
     public final MdsClient mdsClient;
-    public final File context;
     public final Set<Scope> mdsScopes;
 
 
-    public ClientBundle(Admin adminClient, MdsClient mdsClient, SchemaRegistryClient schemaRegistryClient, File context) {
+    public ClientBundle(Admin adminClient, MdsClient mdsClient, SchemaRegistryClient schemaRegistryClient) {
         this.adminClient = adminClient;
         this.mdsClient = mdsClient;
         this.schemaRegistryClient = schemaRegistryClient;
-        this.context = context;
         this.mdsScopes = Collections.emptySet();
     }
 
-    public ClientBundle(Admin adminClient, MdsClient mdsClient, SchemaRegistryClient schemaRegistryClient, File context, Set<Scope> mdsScopes) {
+    public ClientBundle(Admin adminClient, MdsClient mdsClient, SchemaRegistryClient schemaRegistryClient, Set<Scope> mdsScopes) {
         this.adminClient = adminClient;
         this.mdsClient = mdsClient;
         this.schemaRegistryClient = schemaRegistryClient;
-        this.context = context;
         this.mdsScopes = mdsScopes;
     }
 
-    public static ClientBundle fromProperties(Properties properties, File context) {
+    public static ClientBundle fromProperties(Properties properties) {
         SchemaRegistryClient srClient = null;
 
         if (properties.containsKey(SCHEMA_REGISTRY_URL_CONFIG)) {
@@ -86,10 +83,11 @@ public class ClientBundle {
             if (properties.containsKey(MDS_SCOPE_FILE_CONFIG)) {
                 ObjectMapper mapper = new ObjectMapper();
                 try {
-                    scopes = mapper.readValue(new File(context.toString(), properties.get(MDS_SCOPE_FILE_CONFIG).toString()), new TypeReference<Set<Scope>>() {});
+                    scopes = mapper.readValue(new File(properties.get(MDS_SCOPE_FILE_CONFIG).toString()), new TypeReference<Set<Scope>>() {});
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                //TODO: add proper cluster scope to domain file
             } else if (Boolean.parseBoolean(properties.getProperty(MDS_USE_CLUSTER_REGISTRY_CONFIG, "false"))) {
                 try {
                     System.out.println("Getting scopes from cluster registry");
@@ -106,7 +104,7 @@ public class ClientBundle {
             }
         }
 
-        return new ClientBundle(KafkaAdminClient.create(properties), mdsClient, srClient, context, scopes);
+        return new ClientBundle(KafkaAdminClient.create(properties), mdsClient, srClient, scopes);
     }
 
 }

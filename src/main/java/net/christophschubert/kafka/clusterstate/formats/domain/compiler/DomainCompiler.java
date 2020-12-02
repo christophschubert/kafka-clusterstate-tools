@@ -63,7 +63,7 @@ public class DomainCompiler {
     //TODO: document properly
     private SerializationInfo ti2si(TypeInformation ti) {
         if (ti == null) return null;
-        return new SerializationInfo(ti.type, ti.schemaFile);
+        return new SerializationInfo(ti.type, ti.schemaFile, ti.subjectNameStrategy);
     }
     //TODO: document properly
     private TopicDataModel convertDataModel(DataModel dm) {

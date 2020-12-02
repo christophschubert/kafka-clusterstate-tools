@@ -18,4 +18,11 @@ public class DeleteTopicAction implements Action {
         bundle.adminClient.deleteTopics(Collections.singleton(topicName));
         return false;
     }
+
+    @Override
+    public String toString() {
+        return "DeleteTopicAction{" +
+                "topicName='" + topicName + '\'' +
+                '}';
+    }
 }

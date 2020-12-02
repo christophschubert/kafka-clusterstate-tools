@@ -38,4 +38,8 @@ public class ClusterStateTest {
         assertEquals(Set.of(entryAlias1Mapped, entryKeepMe), mappedPrincipals.aclEntries);
         assertEquals(Set.of(bindingAlias2Mapped, bindingKeepMe), mappedPrincipals.roleBindings);
     }
+
+    //TODO: add test for merge-method
+    //TODO: add test for filterByPrefix
+    //TODO: add test for filterToCluster
 }

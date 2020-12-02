@@ -79,6 +79,7 @@ public class ClusterState {
         return new Builder(this)
                 .withAclEntries(Sets.filter(this.aclEntries, entry -> entry.resourceType == ResourceType.CLUSTER))
                 .withRoleBindingsEntries(Sets.filter(this.roleBindings, RbacBindingInScope::isClusterLevel))
+                .withTopicDescriptions(Collections.emptyMap())
                 .build();
     }
 
@@ -123,7 +124,6 @@ public class ClusterState {
     }
 
 
-
     public ClusterState merge(ClusterState other) {
         final var mergedRoleBindings = Sets.union(this.roleBindings, other.roleBindings);
         final var mergedAclEntries = Sets.union(this.aclEntries, other.aclEntries);
@@ -137,7 +137,6 @@ public class ClusterState {
                 Sets.union(this.managedTopicPrefixes, other.managedTopicPrefixes)
         );
     }
-
 
 
     public static final ClusterState empty = new ClusterState.Builder().build();

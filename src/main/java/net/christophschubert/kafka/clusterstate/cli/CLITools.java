@@ -1,5 +1,6 @@
 package net.christophschubert.kafka.clusterstate.cli;
 
+import net.christophschubert.kafka.clusterstate.formats.env.CloudCluster;
 import net.christophschubert.kafka.clusterstate.utils.MapTools;
 import net.christophschubert.kafka.clusterstate.formats.domain.DomainParser;
 import org.apache.kafka.clients.admin.AdminClientConfig;
@@ -67,4 +68,13 @@ public class CLITools {
         final List<String> parts = Arrays.asList(input.split(Pattern.quote(";")));
         return MapTools.mapFromList(parts, s -> Arrays.asList(s.split(Pattern.quote(","))));
     }
+
+    static Map<String, String> getClientProps(CloudCluster cluster) {
+        final var props = new HashMap<String, String>();
+        props.putAll(cluster.clientProperties.getOrDefault("kafka", Collections.emptyMap()));
+        props.putAll(cluster.clientProperties.getOrDefault("schemaRegistry", Collections.emptyMap()));
+        return props;
+    }
+
+
 }

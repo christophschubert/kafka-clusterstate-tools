@@ -11,7 +11,6 @@ public class ClusterLevelPrivileges {
     public ClusterLevelPrivileges(
             @JsonProperty("acls") ClusterLevelAcls acls
     ) {
-
         this.acls = acls;
     }
 }
