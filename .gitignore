@@ -29,5 +29,3 @@ hs_err_pid*
 
 .java-version
 
-# this file contains API-Keys and API-Secrets for all environments
-bin/setenv.sh
