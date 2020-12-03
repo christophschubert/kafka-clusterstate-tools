@@ -15,5 +15,3 @@ echo schema_reg_url:     $schema_reg_url
 echo sr_id:              $sr_id
 echo service_account_id: $service_account_id
 echo api_result:         $api_result
-
-

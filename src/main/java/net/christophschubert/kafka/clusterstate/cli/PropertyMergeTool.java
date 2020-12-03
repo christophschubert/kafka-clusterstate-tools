@@ -6,6 +6,7 @@ import net.christophschubert.kafka.clusterstate.formats.env.CloudCluster;
 import net.christophschubert.kafka.clusterstate.formats.env.Environment;
 import net.christophschubert.kafka.clusterstate.utils.MapTools;
 
+import org.apache.commons.logging.Log;
 import org.apache.commons.text.StringSubstitutor;
 
 import java.io.File;
@@ -29,6 +30,7 @@ public class PropertyMergeTool {
     }
 
     public static Properties getClientProperties(String environmentPath, String clusterName ) {
+        System.out.println( "> merge API keys from ENV_VARS with cluster client property template for cluster: [" + clusterName + "] from ENV-DESCRIPTOR: " + environmentPath );
         return getClientProperties( new File(environmentPath), clusterName );
     }
 
