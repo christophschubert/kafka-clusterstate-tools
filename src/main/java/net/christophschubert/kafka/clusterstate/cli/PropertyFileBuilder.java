@@ -14,7 +14,7 @@ import java.io.PrintStream;
 import java.util.*;
 
 /**
- * create a property file from a environment (domain files can be extracted from environment)
+ * create a property file from an environment (domain files can be extracted from environment)
  */
 @CommandLine.Command(name= "propertygenerator", subcommands = { CommandLine.HelpCommand.class }, version = "0.1.0",
         description = "Generate property files for application.")
@@ -24,13 +24,14 @@ public class PropertyFileBuilder {
             @CommandLine.Parameters(paramLabel = "environment", description = "path to env file") File environmentPath,
             @CommandLine.Parameters(paramLabel = "cluster") String clusterName
     ) {
-        final var objectMapper = new ObjectMapper(new YAMLFactory());
 
         try {
 
+            final var objectMapper = new ObjectMapper(new YAMLFactory());
+
             final var substitutions = EnvVarTools.extractEnvVars( clusterName, System.getenv() );
 
-            printProps(substitutions, System.out );
+            // printProps(substitutions, System.out );
 
             final StringSubstitutor substitutor = new StringSubstitutor(substitutions);
 
@@ -42,24 +43,21 @@ public class PropertyFileBuilder {
                 System.err.println("Could not load cluster " + clusterName);
                 System.exit(1);
             }
+            else {
 
-            final var cluster = maybeCluster.get();
+                Properties cpp = PropertyMergeTool.getClientProperties( maybeCluster.get() , clusterName );
 
-            printProps(CLITools.getClientProps(cluster), System.out);
+                /**
+                 * Export properties files into cpl folder.
+                 */
+                PrintStream ps = getPropertyFileWriter(environmentPath, clusterName);
 
-            Map<String, String> cpp = CLITools.getClientProps(cluster);
+                printProps(cpp, ps);
 
-            cpp.putAll(MapTools.mapValues(CLITools.getClientProps(cluster), substitutor::replace));
+                ps.flush();
+                ps.close();
 
-            /**
-             * Export properties files into cpl folder.
-             */
-            PrintStream ps = getPropertyFileWriter( environmentPath, clusterName );
-
-            printProps( cpp, ps );
-
-            ps.flush();
-            ps.close();
+            }
 
 
         } catch (Exception e) {
@@ -71,6 +69,15 @@ public class PropertyFileBuilder {
         return 0;
     }
 
+    /**
+     * We create a PrintStream instance to export the properties to a file in a "cpf" named folder in the same folder
+     * as the environment file.
+     *
+     * @param environmentPath
+     * @param clusterName
+     * @return
+     * @throws Exception
+     */
     PrintStream getPropertyFileWriter(File environmentPath, String clusterName) throws Exception {
         File parent = environmentPath.getParentFile();
         File cpf = new File( parent.getAbsolutePath() + "/cpf/cp-client-props-" + clusterName + ".properties" );
