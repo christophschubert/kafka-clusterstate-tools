@@ -39,6 +39,26 @@ public class CloudGovernance {
         return 0;
     }
 
+    @CommandLine.Command(name = "applyToSelectedCluster", description = "Apply domain description from context to the selected cluster.")
+    int applyToSelectedCluster(
+            @CommandLine.Parameters(paramLabel = "environment", description = "path to the environment", defaultValue = ".") File contextPath,
+            @CommandLine.Parameters(paramLabel = "clustername", description = "the name of the cluster to work on") String clusterName
+    ) {
+        final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        try {
+
+            final var environment = mapper.readValue(contextPath, Environment.class);
+
+            environment.clusters.stream().filter( c -> c.name.equals( clusterName ) ).forEach( c -> applyCluster(c, System.getenv()) );
+
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            return 1;
+        }
+        return 0;
+    }
+
     /**
      * The following entries from the envVars-map will used for substitutions:
      *  KST_CLUSTER_API_SECRET_<clusterName>
@@ -70,10 +90,16 @@ public class CloudGovernance {
         final List<Function<ClusterState, ClusterState>> stateTransforms = Collections.singletonList(cs -> cs.mapPrincipals(cluster.principals));
 
         try {
+
+            File clusterWideACLs = null;
+
+            if( cluster.clusterLevelAccessPath != null ) {
+                clusterWideACLs = new File(cluster.clusterLevelAccessPath);
+            }
+
             //todo: fix this
             final var folders = cluster.domainFileFolders.stream().map(File::new).collect(Collectors.toList());
-            final Runner runner = new Runner(folders, new File(cluster.clusterLevelAccessPath
-            ), clientProps, stateTransforms);
+            final Runner runner = new Runner(folders, clusterWideACLs , clientProps, stateTransforms);
             runner.run();
         } catch (IOException e) {
             e.printStackTrace();
