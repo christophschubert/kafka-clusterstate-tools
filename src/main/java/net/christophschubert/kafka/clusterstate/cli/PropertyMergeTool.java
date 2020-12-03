@@ -7,7 +7,6 @@ import net.christophschubert.kafka.clusterstate.formats.env.Environment;
 import net.christophschubert.kafka.clusterstate.utils.MapTools;
 
 import org.apache.commons.text.StringSubstitutor;
-import picocli.CommandLine;
 
 import java.io.File;
 import java.util.Map;
@@ -17,6 +16,17 @@ import java.util.Properties;
 
 public class PropertyMergeTool {
 
+    public static Properties getPropsFrom_ENV_VARS_AND_DESCRIPTOR(String envFilePath, String defautl_cluster_name) {
+
+        // read target cluster name from ENV_VARS
+        String targetClusterName = EnvVarTools.readPropertyFromEnv( "KST" , "TARGET_CLUSTER_NAME" );
+
+        if ( targetClusterName != null )
+            return PropertyMergeTool.getClientProperties(envFilePath, targetClusterName);
+        else
+            return PropertyMergeTool.getClientProperties( envFilePath, defautl_cluster_name );
+
+    }
 
     public static Properties getClientProperties(String environmentPath, String clusterName ) {
         return getClientProperties( new File(environmentPath), clusterName );
@@ -37,7 +47,7 @@ public class PropertyMergeTool {
 
                 Map<String, String> configMap = CLITools.getClientProps(cluster);
 
-                final var substitutions = EnvVarTools.extractEnvVars(clusterName, System.getenv());
+                final var substitutions = EnvVarTools.extractEnvVarsForCluster(clusterName, System.getenv());
 
                 final StringSubstitutor substitutor = new StringSubstitutor(substitutions);
 

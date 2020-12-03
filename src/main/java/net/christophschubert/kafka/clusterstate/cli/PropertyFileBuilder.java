@@ -5,11 +5,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import net.christophschubert.kafka.clusterstate.formats.env.CloudCluster;
 import net.christophschubert.kafka.clusterstate.formats.env.Environment;
 import picocli.CommandLine;
-import net.christophschubert.kafka.clusterstate.utils.MapTools;
 import org.apache.commons.text.StringSubstitutor;
 
 import java.io.*;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 
@@ -29,7 +27,7 @@ public class PropertyFileBuilder {
 
             final var objectMapper = new ObjectMapper(new YAMLFactory());
 
-            final var substitutions = EnvVarTools.extractEnvVars( clusterName, System.getenv() );
+            final var substitutions = EnvVarTools.extractEnvVarsForCluster( clusterName, System.getenv() );
 
             // printProps(substitutions, System.out );
 

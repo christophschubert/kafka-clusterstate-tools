@@ -4,7 +4,6 @@ import java.util.*;
 
 public class EnvVarTools {
 
-
     /**
      * Converts a environment variable name to a corresponding property name.
      *
@@ -36,9 +35,17 @@ public class EnvVarTools {
      * @param envVars
      * @return res
      */
-    static Map<String, String> extractEnvVars(String clusterName, Map<String, String> envVars) {
+    static Map<String, String> extractEnvVarsForCluster(String clusterName, Map<String, String> envVars) {
         final String kstEnvVarPrefix = "KST";
+        return extractEnvVarsForCluster( clusterName, envVars, kstEnvVarPrefix );
+    }
+
+    static Map<String, String> extractEnvVarsForCluster(String clusterName, Map<String, String> envVars, String kstEnvVarPrefix ) {
         final var varKeys = List.of("CLUSTER_API_KEY", "CLUSTER_API_SECRET", "SR_API_KEY", "SR_API_SECRET");
+        return extractEnvVarsForCluster( clusterName, envVars, kstEnvVarPrefix, varKeys);
+    }
+
+    static Map<String, String> extractEnvVarsForCluster(String clusterName, Map<String, String> envVars, String kstEnvVarPrefix, List<String> varKeys) {
 
         final Map<String, String> res = new HashMap<>();
         varKeys.forEach(key -> {
@@ -47,4 +54,9 @@ public class EnvVarTools {
         });
         return res;
     }
+
+    public static String readPropertyFromEnv(String kst, String target_cluster_name_property_name) {
+        return System.getenv().get( kst + "_" + target_cluster_name_property_name );
+    }
+
 }

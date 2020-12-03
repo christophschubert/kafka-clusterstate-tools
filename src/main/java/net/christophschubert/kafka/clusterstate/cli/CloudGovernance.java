@@ -51,7 +51,7 @@ public class CloudGovernance {
      */
     void applyCluster(CloudCluster cluster, Map<String, String> envVars) {
 
-        final var substitutions = EnvVarTools.extractEnvVars(cluster.name, envVars);
+        final var substitutions = EnvVarTools.extractEnvVarsForCluster(cluster.name, envVars);
 
         /*
         env vars to create to
