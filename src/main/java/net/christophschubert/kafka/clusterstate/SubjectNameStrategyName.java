@@ -3,10 +3,11 @@ package net.christophschubert.kafka.clusterstate;
 import io.confluent.kafka.serializers.subject.RecordNameStrategy;
 import io.confluent.kafka.serializers.subject.TopicNameStrategy;
 import io.confluent.kafka.serializers.subject.TopicRecordNameStrategy;
-import io.confluent.kafka.serializers.subject.strategy.SubjectNameStrategy;
+import io.confluent.kafka.serializers.subject.SubjectNameStrategy;
 
 //TODO: find better name
 public enum SubjectNameStrategyName {
+
     TOPIC(new TopicNameStrategy()),
     RECORD(new RecordNameStrategy()),
     TOPICRECORD(new TopicRecordNameStrategy());

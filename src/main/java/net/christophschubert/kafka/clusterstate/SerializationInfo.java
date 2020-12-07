@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 public class SerializationInfo {
+
     @JsonProperty("type")
     public final String type;
 
@@ -23,7 +24,7 @@ public class SerializationInfo {
     ) {
         this.type = type;
         this.schemaFile = schemaFile;
-        this.subjectStrategy = subjectStrategy;
+        this.subjectStrategy = subjectStrategy == null ? SubjectNameStrategyName.TOPIC : subjectStrategy;
     }
 
     @Override
