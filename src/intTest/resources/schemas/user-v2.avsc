@@ -1,0 +1,9 @@
+{
+    "type": "record",
+    "name": "User",
+    "fields": [
+        {"name": "email", "type": "string"},
+        {"name": "id", "type": "int"},
+        {"name": "age", "type": "int", "default": 18}
+    ]
+}

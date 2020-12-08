@@ -6,14 +6,20 @@ import net.christophschubert.kafka.clusterstate.actions.Action;
 import net.christophschubert.kafka.clusterstate.formats.domain.DomainParser;
 import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DefaultStrategies;
 import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DomainCompiler;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.DescribeTopicsOptions;
+import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.junit.Test;
+import org.testcontainers.containers.ContainerState;
 import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -21,10 +27,10 @@ import java.util.concurrent.ExecutionException;
 public class FirstIntegrationTest {
 
     Properties buildProperties(DockerComposeContainer env, String serviceName, int port) {
-        final var host = env.getServiceHost("kafka_1", 9093) + ":" + env.getServicePort("kafka_1", 9093);
+        final var host = env.getServiceHost(serviceName, port) + ":" + env.getServicePort(serviceName, port);
         final var properties = new Properties();
         properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, host);
-        properties.put("sasl.mechanism", "PLAIN");
+        properties.put("sasl.mechanism" , "PLAIN");
         properties.put("security.protocol", "SASL_PLAINTEXT");
         properties.put("sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=admin password=\"admin-secret\";");
 
@@ -33,12 +39,18 @@ public class FirstIntegrationTest {
 
     @Test
     public void Test() throws InterruptedException, ExecutionException, JsonProcessingException {
+
+
         final DockerComposeContainer environment =
                 new DockerComposeContainer<>(new File("src/intTest/resources/envs/simple.yaml"))
                         .withExposedService("kafka_1", 9093, Wait.forListeningPort());
         environment.start();
 
-        ClientBundle bundle = ClientBundle.fromProperties(buildProperties(environment, "kakfa_1", 9093));
+        final var kafka_1 = environment.getContainerByServiceName("kafka_1").get();
+        ContainerState state = (ContainerState)kafka_1;
+
+
+        ClientBundle bundle = ClientBundle.fromProperties(buildProperties(environment, "kafka_1", 9093));
 
         final var clusterState = ClusterStateManager.build(bundle);
 
@@ -74,9 +86,13 @@ public class FirstIntegrationTest {
             action.runRaw(bundle);
         }
 
-        final var finalClusterState = ClusterStateManager.build(bundle);
+        final var finalClusterState = ClusterStateManager.build(bundle, false);
         assertEquals(3, finalClusterState.aclEntries.size());
         assertEquals(Set.of("test_configTestProject_topicA", "test_configTestProject_topicB"), finalClusterState.topicNames());
+        System.out.println(finalClusterState.topicDescriptions.get("test_configTestProject_topicA"));
+
     }
+
+
 
 }

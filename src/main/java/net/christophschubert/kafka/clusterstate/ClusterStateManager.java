@@ -1,12 +1,15 @@
 package net.christophschubert.kafka.clusterstate;
 
 import net.christophschubert.kafka.clusterstate.actions.*;
+import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DefaultStrategies;
 import net.christophschubert.kafka.clusterstate.mds.MdsTools;
 import net.christophschubert.kafka.clusterstate.mds.RbacBindingInScope;
 import net.christophschubert.kafka.clusterstate.mds.Scope;
 import net.christophschubert.kafka.clusterstate.policies.IncrementalUpdateNoCheck;
 import net.christophschubert.kafka.clusterstate.policies.TopicConfigUpdatePolicy;
+import net.christophschubert.kafka.clusterstate.utils.Sets;
 import org.apache.kafka.clients.admin.ConfigEntry;
+import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
@@ -23,19 +26,41 @@ public class ClusterStateManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ClusterStateManager.class);
 
-    //TODO: extract schemas from cluster, whenever possible
     public static ClusterState build(ClientBundle bundle) throws ExecutionException, InterruptedException {
+        return build(bundle, true);
+    }
+
+    /**
+     *
+     * @param bundle
+     * @param includeDefaults
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    //TODO: extract schemas from cluster, whenever possible
+    public static ClusterState build(ClientBundle bundle, boolean includeDefaults) throws ExecutionException, InterruptedException {
         Map<String, TopicDescription> topicDescriptions = new HashMap<>();
-        final Set<String> strings = bundle.adminClient.listTopics().names().get();
-        final Collection<ConfigResource> collect = strings.stream().map(s -> new ConfigResource(ConfigResource.Type.TOPIC, s)).collect(Collectors.toSet());
+        final Set<String> topicNames = bundle.adminClient.listTopics().names().get();
+        final Collection<ConfigResource> collect = topicNames.stream().map(s -> new ConfigResource(ConfigResource.Type.TOPIC, s)).collect(Collectors.toSet());
         bundle.adminClient.describeConfigs(collect).all().get().forEach((resource, config) ->
                 topicDescriptions.put(resource.name(),
                         new TopicDescription(
                                 resource.name(),
-                                config.entries().stream().collect(Collectors.toMap(ConfigEntry::name, ConfigEntry::value)),
+                                config.entries().stream()
+                                        .filter(configEntry -> includeDefaults || !configEntry.isDefault())
+                                        .collect(Collectors.toMap(ConfigEntry::name, ConfigEntry::value)),
                                 null //currently, we do not extract Schemas from cluster
                         ))
         );
+        //extract partitioninfo:
+        final var describeTopicsResult = bundle.adminClient.describeTopics(topicNames);
+        describeTopicsResult.all().get().forEach((topicName, description) -> {
+            final var configs = topicDescriptions.get(topicName).configs();
+            configs.put("num.partitions", Integer.toString(description.partitions().size()));
+            //TODO: check whether there is a better way to extract the replication factor
+            configs.put("replication.factor", Integer.toString(description.partitions().get(0).replicas().size()));
+        });
         Set<ACLEntry> aclEntries = Collections.emptySet();
         try {
             final Collection<AclBinding> aclBindings = bundle.adminClient.describeAcls(AclBindingFilter.ANY).values().get();
@@ -51,7 +76,7 @@ public class ClusterStateManager {
 
         Set<RbacBindingInScope> rbacBindings = new HashSet<>();
         if (bundle.mdsClient != null) {
-            //TODO: find a better way to figure out whether we should extract
+            //TODO: find a better way to figure out whether we should extract role bindings from cluster
             try {
                 Set<Scope> scopes = bundle.mdsScopes;
                 if (scopes.isEmpty()) {
