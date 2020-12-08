@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 public class SerializationInfo {
+
     @JsonProperty("type")
     public final String type;
 

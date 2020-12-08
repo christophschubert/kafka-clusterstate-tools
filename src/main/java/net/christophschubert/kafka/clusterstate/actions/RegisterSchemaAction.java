@@ -5,7 +5,7 @@ import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import io.confluent.kafka.schemaregistry.json.JsonSchema;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
-import io.confluent.kafka.serializers.subject.strategy.SubjectNameStrategy;
+import io.confluent.kafka.serializers.subject.SubjectNameStrategy;
 import net.christophschubert.kafka.clusterstate.ClientBundle;
 import net.christophschubert.kafka.clusterstate.SerializationInfo;
 import org.slf4j.Logger;
@@ -55,10 +55,16 @@ public class RegisterSchemaAction implements Action {
     int loadAndRegisterSchema(SchemaRegistryClient client, String schemaString) throws IOException, RestClientException {
 
         final String type = tagToProviderType.getOrDefault(serializationInfo.type, serializationInfo.type);
+
+        logger.info("Try to register schema : {##############"  );
+        logger.info( schemaString );
+        logger.info("########################################}" );
+
         final var parsedSchema = client.parseSchema(type, schemaString, Collections.emptyList());
         if (parsedSchema.isPresent()) {
             final SubjectNameStrategy strategy = serializationInfo.subjectStrategy.strategy;
-            final var subjectName = strategy.subjectName(topicName, keyOrValue.equals("key"), parsedSchema.get());
+            final var subjectName = strategy.getSubjectName(topicName, keyOrValue.equals("key"), parsedSchema.get());
+
             final var id = client.register(subjectName, parsedSchema.get());
             logger.info("Registered schema for subject " + subjectName + " with id: " + id);
             return id;
