@@ -23,7 +23,7 @@ public class SerializationInfo {
     ) {
         this.type = type;
         this.schemaFile = schemaFile;
-        this.subjectStrategy = subjectStrategy;
+        this.subjectStrategy = subjectStrategy == null ? SubjectNameStrategyName.TOPIC : subjectStrategy;
     }
 
     @Override
