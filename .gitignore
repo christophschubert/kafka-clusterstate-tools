@@ -28,4 +28,5 @@ build
 hs_err_pid*
 
 .java-version
+.DS_Store
 
