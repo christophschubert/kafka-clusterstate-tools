@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -259,7 +260,7 @@ public class MdsClient {
         final var response = post(endpoint, scope);
 
         if (response.statusCode() == 200) {
-            return mapper.readValue(response.body(), Set.class);
+            return mapper.readValue(response.body(), new TypeReference<Set<String>>() {});
         }
         throw exceptionFromResponse(response);
     }

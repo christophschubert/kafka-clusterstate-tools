@@ -1,0 +1,19 @@
+---
+acls:
+  idempotentWritePrincipals:
+    - User:abc
+    - User:xyz
+namespaces:
+  - name: payments.
+    managerPrincipals:
+      - User:paymentManager
+    consumerPrincipals:
+      - User:paymentConsumer
+    producerPrincipals:
+      - User:paymentProducer
+  - name: ordes.
+    managerPrincipals:
+      - User:ordersManager
+    consumerPrincipals:
+      - User:paymentConsumer
+      - User:orderConsumer
