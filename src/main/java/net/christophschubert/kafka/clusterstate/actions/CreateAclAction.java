@@ -15,7 +15,7 @@ public class CreateAclAction implements Action {
 
     @Override
     public boolean runRaw(ClientBundle bundle) throws InterruptedException, ExecutionException {
-        bundle.adminClient.createAcls(Collections.singleton(entry.toAclBinding()));
+        bundle.adminClient.createAcls(Collections.singleton(entry.toAclBinding())).all().get();
         return false;
     }
 
