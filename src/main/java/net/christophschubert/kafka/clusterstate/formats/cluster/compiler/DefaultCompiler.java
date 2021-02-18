@@ -36,7 +36,7 @@ public class DefaultCompiler {
         final String name = namespace.name;
         final Set<ACLEntry> entries = new HashSet<>();
 
-        if (namespace.useWildCardGroup) {
+        if (Boolean.TRUE.equals(namespace.useWildCardGroup)) {
             namespace.consumerPrincipals.forEach(principal ->
                 entries.addAll(AclEntries.topicPrefixConsumerWildcard(principal, name))
             );
