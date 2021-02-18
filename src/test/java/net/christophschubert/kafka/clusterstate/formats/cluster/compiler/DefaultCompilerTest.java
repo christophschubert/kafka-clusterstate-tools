@@ -3,6 +3,7 @@ package net.christophschubert.kafka.clusterstate.formats.cluster.compiler;
 import net.christophschubert.kafka.clusterstate.AclEntries;
 import net.christophschubert.kafka.clusterstate.formats.cluster.ClusterLevelAcls;
 import net.christophschubert.kafka.clusterstate.formats.cluster.ClusterLevelPrivileges;
+import net.christophschubert.kafka.clusterstate.formats.cluster.Namespace;
 import org.apache.kafka.common.acl.AclOperation;
 import org.apache.kafka.common.resource.ResourceType;
 import org.junit.Test;
@@ -14,7 +15,7 @@ import static org.junit.Assert.assertTrue;
 
 public class DefaultCompilerTest {
     @Test
-    public void compilerTest() {
+    public void compilerTestClusterLevel() {
         final ClusterLevelPrivileges privileges = new ClusterLevelPrivileges(
                 new ClusterLevelAcls(
                         Set.of("alter:1", "alter:2"),
@@ -46,5 +47,27 @@ public class DefaultCompilerTest {
     @Test
     public void rightNumberOfClusterLevelAcls() {
         assertEquals(7, DefaultCompiler.clusterLevelOperations.size());
+    }
+
+    @Test
+    public void compilerNamespaceWildcardGroup() {
+        final ClusterLevelPrivileges privileges = new ClusterLevelPrivileges(
+                new ClusterLevelAcls(
+                        Set.of("alter:1", "alter:2"),
+                        Set.of("alterConfig:1"),
+                        Set.of("clusterAction:1"),
+                        Set.of("create:1"),
+                        Set.of("describe:1", "describe:2"),
+                        Set.of("describeConfig:1"),
+                        Set.of("idempotentWrite:1")
+                ),
+                Set.of(new Namespace("namespace", Set.of("User:manager1"), Set.of("User:consumer1", "User:consumer2"), Set.of("User:producer-1"), true))
+        );
+
+        final DefaultCompiler compiler = new DefaultCompiler();
+
+
+        compiler.compile(privileges).aclEntries.forEach(System.out::println);
+
     }
 }

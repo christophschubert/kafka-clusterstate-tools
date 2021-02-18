@@ -36,7 +36,15 @@ public class DefaultCompiler {
         final String name = namespace.name;
         final Set<ACLEntry> entries = new HashSet<>();
 
-        namespace.consumerPrincipals.forEach(principal -> entries.addAll(AclEntries.topicPrefixConsumerPrefix(principal, name, name)));
+        if (namespace.useWildCardGroup) {
+            namespace.consumerPrincipals.forEach(principal ->
+                entries.addAll(AclEntries.topicPrefixConsumerWildcard(principal, name))
+            );
+        } else {
+            namespace.consumerPrincipals.forEach(principal ->
+                    entries.addAll(AclEntries.topicPrefixConsumerPrefix(principal, name, name))
+            );
+        }
         namespace.producerPrincipals.forEach(principal -> entries.addAll(AclEntries.topicPrefixProducer(principal, name)));
 
         final Set<AclOperation> managementOperations = Set.of(

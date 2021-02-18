@@ -21,17 +21,22 @@ public class Namespace {
     @JsonProperty("producerPrincipals")
     public final Set<String> producerPrincipals;
 
+    @JsonProperty("useWildCardGroup")
+    public final Boolean useWildCardGroup;
+
     @JsonCreator
     public Namespace(
             @JsonProperty("name") String name,
             @JsonProperty("managerPrincipals") Set<String> managerPrincipals,
             @JsonProperty("consumerPrincipals") Set<String> consumerPrincipals,
-            @JsonProperty("producerPrincipals")Set<String> producerPrincipals
+            @JsonProperty("producerPrincipals") Set<String> producerPrincipals,
+            @JsonProperty("useWildCardGroup") Boolean useWildCardGroup
     ) {
         this.name = name;
         this.managerPrincipals = emptyForNull(managerPrincipals);
         this.consumerPrincipals = emptyForNull(consumerPrincipals);
         this.producerPrincipals = emptyForNull(producerPrincipals);
+        this.useWildCardGroup = useWildCardGroup;
     }
 
     @Override
