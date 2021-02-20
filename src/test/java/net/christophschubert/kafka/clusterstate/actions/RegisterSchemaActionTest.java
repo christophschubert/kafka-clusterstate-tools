@@ -33,7 +33,7 @@ public class RegisterSchemaActionTest {
 
     @Test
     public void registerAvroSchema() throws IOException, RestClientException {
-        final var recordStrategyInfo = new SerializationInfo("Avro", "", SubjectNameStrategyName.RECORD);
+        final var recordStrategyInfo = new SerializationInfo("Avro", "src/test/resources/schemas/Fullname.avsc", SubjectNameStrategyName.RECORD);
         final var registerSchemaAction = new RegisterSchemaAction("test-topic", "value", recordStrategyInfo);
         final int id = registerSchemaAction.loadAndRegisterSchema(srClient, avroSampleSchema);
 

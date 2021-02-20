@@ -4,8 +4,6 @@ projects:
 - name: helloproj
   topics:
     - name: topicA
-      configs:
-        retention.ms: "10000"
     - name: topicB
   consumers:
     - principal: "User:xxx"

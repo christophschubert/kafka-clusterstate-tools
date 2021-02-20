@@ -6,20 +6,15 @@ import net.christophschubert.kafka.clusterstate.actions.Action;
 import net.christophschubert.kafka.clusterstate.formats.domain.DomainParser;
 import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DefaultStrategies;
 import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DomainCompiler;
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.apache.kafka.clients.admin.DescribeTopicsOptions;
-import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.junit.Test;
 import org.testcontainers.containers.ContainerState;
 import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -77,7 +72,7 @@ public class FirstIntegrationTest {
 
         DomainParser parser = new DomainParser();
         final var domain = parser.deserialize(input, DomainParser.Format.YAML, null);
-        final var compiler = DomainCompiler.createAcls(new DefaultStrategies.BoringStrategy(), DefaultStrategies.aclStrategy);
+        final var compiler = DomainCompiler.createAcls(new DefaultStrategies.DefaultNamingStrategy(), DefaultStrategies.aclStrategy);
         final var clusterState1 = compiler.compile(domain);
         final var clusterStateDiff = new ClusterStateDiff(clusterState, clusterState1);
         final var clusterStateManager = new ClusterStateManager();

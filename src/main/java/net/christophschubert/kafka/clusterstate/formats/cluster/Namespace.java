@@ -36,7 +36,7 @@ public class Namespace {
         this.managerPrincipals = emptyForNull(managerPrincipals);
         this.consumerPrincipals = emptyForNull(consumerPrincipals);
         this.producerPrincipals = emptyForNull(producerPrincipals);
-        this.useWildCardGroup = useWildCardGroup;
+        this.useWildCardGroup = useWildCardGroup == null ? false : useWildCardGroup;
     }
 
     @Override

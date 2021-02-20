@@ -17,7 +17,7 @@ public class ExtensibleProjectAuthorizationStrategy<A> implements DomainCompiler
      * @param <R> type of the resource.
      */
     public interface ResourceStrategy<A, R extends ProjectSubResource> {
-        Set<A> acls(R resource, DomainCompiler.ResourceNamingStrategy namingStrategy);
+        Set<A> acls(R resource, ResourceNamingStrategy namingStrategy);
     }
 
     private final ResourceStrategy<A, Consumer> consumerSubAclStrategy;
@@ -45,7 +45,7 @@ public class ExtensibleProjectAuthorizationStrategy<A> implements DomainCompiler
      * @return A set of ACLs which is the union of the ones specified by the sub-resource strategies.
      */
     @Override
-    public Set<A> authForProject(Project project, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+    public Set<A> authForProject(Project project, ResourceNamingStrategy namingStrategy) {
         Set<A> entries = new HashSet<>();
         project.consumers.forEach(consumer -> entries.addAll(
                 consumerSubAclStrategy.acls(consumer,  namingStrategy)

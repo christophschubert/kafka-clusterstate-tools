@@ -6,6 +6,7 @@ import net.christophschubert.kafka.clusterstate.formats.domain.*;
 import org.apache.kafka.common.acl.AclOperation;
 import org.apache.kafka.common.resource.ResourceType;
 
+import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -14,12 +15,25 @@ import java.util.stream.Stream;
 
 public class DefaultStrategies {
 
-    public static final DomainCompiler.ResourceNamingStrategy namingStrategy = new BoringStrategy();
+    public static final ResourceNamingStrategy namingStrategy = new DefaultNamingStrategy();
 
-    public static class BoringStrategy implements DomainCompiler.ResourceNamingStrategy {
+    public static class DefaultNamingStrategy implements ResourceNamingStrategy {
+
+        public static final String DEFAULT_SEPARATOR = "_";
+
+        private final String separator;
+
+        public DefaultNamingStrategy(String separator) {
+            this.separator = separator;
+        }
+
+        public DefaultNamingStrategy() {
+            this(DEFAULT_SEPARATOR);
+        }
+
         @Override
-        public String projectPrefix(Project project) {
-            return project.parent.name() + "_" + project.name + "_";
+        public String projectPrefix(@NotNull Project project) {
+            return project.parent.name() + separator + project.name + separator;
         }
     }
 
@@ -44,7 +58,7 @@ public class DefaultStrategies {
      */
     static class EmptyAclStrategy<A, R extends ProjectSubResource> implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<A, R> {
         @Override
-        public Set<A> acls(R resource, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        public Set<A> acls(R resource, ResourceNamingStrategy namingStrategy) {
             return Collections.emptySet();
         }
     }
@@ -53,7 +67,7 @@ public class DefaultStrategies {
     //TODO: rename!
     static class ConsumerAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<ACLEntry, Consumer> {
         @Override
-        public Set<ACLEntry> acls(Consumer consumer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        public Set<ACLEntry> acls(Consumer consumer, ResourceNamingStrategy namingStrategy) {
             final Project project = consumer.parent;
             final String groupId = namingStrategy.name(consumer);
             return readAcls(consumer.principal, project, groupId, consumer.prefixGroup, consumer.topics, namingStrategy);
@@ -65,7 +79,7 @@ public class DefaultStrategies {
     static class DefaultProducerAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<ACLEntry, Producer> {
 
         @Override
-        public Set<ACLEntry> acls(Producer producer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        public Set<ACLEntry> acls(Producer producer, ResourceNamingStrategy namingStrategy) {
             final Project project = producer.parent;
             return writeAcls(producer.principal, project, producer.topics, namingStrategy);
 
@@ -76,7 +90,7 @@ public class DefaultStrategies {
     static class DefaultTopicForeignAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<ACLEntry, Topic> {
 
         @Override
-        public Set<ACLEntry> acls(Topic topic, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        public Set<ACLEntry> acls(Topic topic, ResourceNamingStrategy namingStrategy) {
             final var topicName = namingStrategy.name(topic);
             final var acls = new HashSet<ACLEntry>();
             topic.producerPrincipals.forEach(
@@ -95,7 +109,7 @@ public class DefaultStrategies {
     static class DefaultStreamsAppAclStrategy implements ExtensibleProjectAuthorizationStrategy.ResourceStrategy<ACLEntry, StreamsApp> {
 
         @Override
-        public Set<ACLEntry> acls(StreamsApp streamsApp, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        public Set<ACLEntry> acls(StreamsApp streamsApp, ResourceNamingStrategy namingStrategy) {
             final var principal = streamsApp.principal;
             final var project = streamsApp.parent;
             final String qualifiedName = namingStrategy.name(streamsApp);
@@ -127,7 +141,7 @@ public class DefaultStrategies {
     }
 
 
-    static Set<ACLEntry> writeAcls(String principal, Project project, Set<String> topicNames, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+    static Set<ACLEntry> writeAcls(String principal, Project project, Set<String> topicNames, ResourceNamingStrategy namingStrategy) {
         if (topicNames.isEmpty()) {
             return AclEntries.topicPrefixProducer(principal, namingStrategy.projectPrefix(project));
         } else {
@@ -138,7 +152,7 @@ public class DefaultStrategies {
     }
 
 
-    static Set<ACLEntry> readAcls(String principal, Project project, String groupId, boolean isPrefixGroup, Set<String> topicNames, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+    static Set<ACLEntry> readAcls(String principal, Project project, String groupId, boolean isPrefixGroup, Set<String> topicNames, ResourceNamingStrategy namingStrategy) {
         if (topicNames.isEmpty()) {
             return AclEntries.topicPrefixConsumer(principal, namingStrategy.projectPrefix(project), groupId, isPrefixGroup);
         } else {

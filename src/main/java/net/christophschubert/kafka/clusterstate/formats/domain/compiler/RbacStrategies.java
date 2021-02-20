@@ -5,7 +5,6 @@ import net.christophschubert.kafka.clusterstate.formats.domain.Producer;
 import net.christophschubert.kafka.clusterstate.formats.domain.StreamsApp;
 import net.christophschubert.kafka.clusterstate.formats.domain.Topic;
 import net.christophschubert.kafka.clusterstate.mds.*;
-import org.apache.kafka.common.resource.ResourceType;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,7 +34,7 @@ public class RbacStrategies {
 
         //TODO: rename method of interface
         @Override
-        public Set<RbacBindingInScope> acls(Producer producer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        public Set<RbacBindingInScope> acls(Producer producer, ResourceNamingStrategy namingStrategy) {
             final Set<RbacBindingInScope> bindings = new HashSet<>();
             final var project = producer.parent;
             final var restrictToTopics = producer.topics;
@@ -69,7 +68,7 @@ public class RbacStrategies {
         }
 
         @Override
-        public Set<RbacBindingInScope> acls(Consumer consumer, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        public Set<RbacBindingInScope> acls(Consumer consumer, ResourceNamingStrategy namingStrategy) {
             final Set<RbacBindingInScope> bindings = new HashSet<>();
 
             final var project = consumer.parent;
@@ -106,7 +105,7 @@ public class RbacStrategies {
         }
 
         @Override
-        public Set<RbacBindingInScope> acls(StreamsApp streamsApp, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        public Set<RbacBindingInScope> acls(StreamsApp streamsApp, ResourceNamingStrategy namingStrategy) {
             final Set<RbacBindingInScope> bindings = new HashSet<>();
             final var project = streamsApp.parent;
             final var projectPrefix = namingStrategy.projectPrefix(project);
@@ -135,7 +134,7 @@ public class RbacStrategies {
         }
 
         @Override
-        public Set<RbacBindingInScope> acls(Topic resource, DomainCompiler.ResourceNamingStrategy namingStrategy) {
+        public Set<RbacBindingInScope> acls(Topic resource, ResourceNamingStrategy namingStrategy) {
             //TODO: implement properly
             return Collections.emptySet();
         }

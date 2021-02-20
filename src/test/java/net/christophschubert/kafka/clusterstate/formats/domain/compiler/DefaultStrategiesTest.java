@@ -13,7 +13,7 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 
 public class DefaultStrategiesTest {
-    private final DomainCompiler.ResourceNamingStrategy namingStrategy = new DefaultStrategies.BoringStrategy();
+    private final ResourceNamingStrategy namingStrategy = new DefaultStrategies.DefaultNamingStrategy();
 
     @Test
     public void singleProducerTest() {

@@ -29,7 +29,7 @@ public class EnvVarTools {
      *  KST_SR_API_SECRET_<clusterName>
      *  KST_SR_API_KEY_<clusterName>
      *
-     * Note: the prefic KST is currently fixed (for Kafka Cluster State Tools).
+     * Note: the prefix KST is currently fixed (for Kafka Cluster State Tools).
      *
      * @param clusterName
      * @param envVars

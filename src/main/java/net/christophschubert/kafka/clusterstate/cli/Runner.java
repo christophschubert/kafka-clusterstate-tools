@@ -14,6 +14,7 @@ import net.christophschubert.kafka.clusterstate.formats.domain.DomainParser;
 import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DefaultStrategies;
 import net.christophschubert.kafka.clusterstate.formats.domain.compiler.DomainCompiler;
 import net.christophschubert.kafka.clusterstate.formats.domain.compiler.RbacStrategies;
+import net.christophschubert.kafka.clusterstate.formats.domain.compiler.ResourceNamingStrategy;
 import net.christophschubert.kafka.clusterstate.mds.ClusterRegistry;
 import net.christophschubert.kafka.clusterstate.mds.Scope;
 import net.christophschubert.kafka.clusterstate.utils.FunctionTools;
@@ -44,7 +45,12 @@ public class Runner {
     private final ClusterState currentState;
     private final ClusterStateManager clusterStateManager;
 
-    public Runner(List<File> domainContextPaths, File clusterLevelAccessPath, Properties properties, List<Function<ClusterState, ClusterState>> stateTransforms) throws ExecutionException, InterruptedException {
+    public Runner(
+            List<File> domainContextPaths,
+            File clusterLevelAccessPath,
+            Properties properties,
+            List<Function<ClusterState, ClusterState>> stateTransforms
+    ) throws ExecutionException, InterruptedException {
         this.domainContextPaths = domainContextPaths;
         this.clusterLevelAccessPath = clusterLevelAccessPath;
         this.properties = properties;
@@ -56,7 +62,9 @@ public class Runner {
 
 
     void run() throws InterruptedException, IOException {
-        applyClusterChanges();
+        if (clusterLevelAccessPath != null && clusterLevelAccessPath.exists()) {
+            applyClusterChanges();
+        }
         applyDomainChanges();
     }
 
@@ -89,17 +97,21 @@ public class Runner {
 
         logger.info("Domains: " + domains);
 
+        //create naming strategy
+        final String separator = properties.getProperty(CliConfigs.RESOURCE_NAME_SEPARATOR, DefaultStrategies.DefaultNamingStrategy.DEFAULT_SEPARATOR);
+        final ResourceNamingStrategy namingStrategy = new DefaultStrategies.DefaultNamingStrategy(separator);
+
         DomainCompiler compiler;
         if (bundle.mdsClient != null) {
             //generate RBAC bindings
             ClusterRegistry cr = new ClusterRegistry(bundle.mdsClient);
             final var kafkaClusterName = cr.getKafkaNameForId(bundle.mdsClient.metadataClusterId()).get();
             compiler = DomainCompiler.createRoleBindings(
-                    DefaultStrategies.namingStrategy, RbacStrategies.strategyForScope(
+                    namingStrategy, RbacStrategies.strategyForScope(
                             //TODO: clarify whether this is the right scope!
                             Scope.forClusterName(kafkaClusterName)));
         } else {
-            compiler = DomainCompiler.createAcls(DefaultStrategies.namingStrategy, DefaultStrategies.aclStrategy);
+            compiler = DomainCompiler.createAcls(namingStrategy, DefaultStrategies.aclStrategy);
         }
 
         final var groupedDomains = MapTools.groupBy(domains, Domain::name);
