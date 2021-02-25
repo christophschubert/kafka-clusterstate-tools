@@ -22,8 +22,7 @@ public class AclEntries {
 
 
     public static ACLEntry allowAnyHostWildcard(AclOperation operation, String principal, ResourceType type) {
-        //TODO: check whether using PatternType.ANY is the right choice here
-        return new ACLEntry(operation, principal, "*", AclPermissionType.ALLOW, ResourcePattern.WILDCARD_RESOURCE, type, PatternType.ANY);
+        return new ACLEntry(operation, principal, "*", AclPermissionType.ALLOW, ResourcePattern.WILDCARD_RESOURCE, type, PatternType.LITERAL);
     }
 
     public static Set<ACLEntry> topicLiteralProducer(String principal, String topicName) {
