@@ -15,7 +15,7 @@ public class DeleteAclAction implements Action {
 
     @Override
     public boolean runRaw(ClientBundle bundle) throws InterruptedException, ExecutionException {
-        bundle.adminClient.deleteAcls(Collections.singleton(entry.toAclBinding().toFilter()));
+        bundle.adminClient.deleteAcls(Collections.singleton(entry.toAclBinding().toFilter())).all().get();
         return false;
     }
 
