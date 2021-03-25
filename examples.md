@@ -19,3 +19,22 @@ projects:
           description: "A correlation Id set by process addCorrelationId" 
   - name: processed
 ```
+
+Abstract role definitions
+```yaml
+  consumers:
+    - principal: "User:xxx"
+      groupId: "groupForApp"
+      prefixGroup: true
+  producers:
+    - principal: "User:producer"
+  streamsApps:
+    - principal: "Group:StreamTeam"
+      applicationId: "dream-app"
+    - principal: "Group:StreamTeam2"
+      applicationId: "stream-app"
+      inputTopics:
+        - topicA
+      outputTopics:
+        - topicB
+```
