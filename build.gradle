@@ -2,6 +2,8 @@ plugins {
     id 'java'
 }
 
+test.onlyIf { !project.hasProperty('doTest') }
+
 group 'net.christophschubert'
 version '1.0.1-SNAPSHOT'
 
